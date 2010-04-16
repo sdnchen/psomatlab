@@ -65,6 +65,7 @@ options.PlotFcns = {} ;
 options.PlotInterval = 1 ;
 options.PopInitRange = [0;1] ;
 options.PopulationSize = 40 ;
+options.PopulationType = 'doubleVector' ;
 options.SocialAttraction = 1.5 ;
 options.StallGenLimit = 50 ;
 options.TolCon = 1e-6 ;
@@ -76,11 +77,11 @@ if ~nargin && ~nargout
     fprintf('\n')
     fprintf('CognitiveAttraction: [Positive scalar | {%g}]\n',...
         options.CognitiveAttraction) ;
-    fprintf('     ConstrBoundary: [soft | reflect | absorb | {%s}]\n',...
+    fprintf('     ConstrBoundary: [soft | reflect | absorb | {''%s''}]\n',...
         options.ConstrBoundary) ;
-    fprintf('            Display: [off | final | {%s}]\n',...
+    fprintf('            Display: [''off'' | ''final'' | {''%s''}]\n',...
         options.Display) ;
-    fprintf('           DemoMode: [fast | pretty | on | off | {%s}]\n',...
+    fprintf('           DemoMode: [''fast'' | ''pretty'' | ''on'' | ''off'' | {''%s''}]\n',...
         options.DemoMode) ;
     fprintf('       FitnessLimit: [Scalar | {%g}]\n',...
         options.FitnessLimit) ;
@@ -88,8 +89,8 @@ if ~nargin && ~nargout
         options.Generations) ;
     msg = sprintf('          HybridFcn: [@fminsearch | @patternsearch |');
     fprintf('%s @fminunc | @fmincon | {[]}]\n',msg)
-    fprintf('  InitialPopulation: [nxnvars matrix | {[]}]')
-    fprintf('  InitialVelocities: [nxnvars matrix | {[]}]')
+    fprintf('  InitialPopulation: [nxnvars matrix | {[]}]\n')
+    fprintf('  InitialVelocities: [nxnvars matrix | {[]}]\n')
     % PlotFcns, a bit tricky to turn into a string:
     % ---------------------------------------------------------------------
     if ~isempty(options.PlotFcns)
@@ -110,6 +111,8 @@ if ~nargin && ~nargout
         mat2str(options.PopInitRange)) ;
     fprintf('     PopulationSize: [Positive integer | {%g}]\n',...
         options.PopulationSize) ;
+    fprintf('     PopulationType: [''bitstring'' | ''doubleVector'' | {''%s''}]\n',...
+        options.PopulationType) ;
     fprintf('   SocialAttraction: [Positive scalar | {%g}]\n',...
         options.SocialAttraction) ;
     fprintf('      StallGenLimit: [Positive integer | {%g} ]\n',...
@@ -118,7 +121,7 @@ if ~nargin && ~nargout
         options.TolFun) ;
     fprintf('             TolCon: [Positive scalar | {%g}]\n',...
         options.TolCon) ;
-    fprintf('         Vectorized: [on | off | {%s}]\n',...
+    fprintf('         Vectorized: [''on'' | ''off'' | {''%s''}]\n',...
         options.Vectorized) ;
     fprintf('      VelocityLimit: [Positive scalar | {[]}]\n');
     fprintf('\n')

@@ -14,10 +14,7 @@ else
     end
 end
 
-verbosity = 1 ; % For options.Display == 'final' (default)
-if strcmp(options.Display,'off'), verbosity = 0 ; end
-
-if verbosity > 0
+if options.Verbosity > 0
     fprintf('\nBest point before hybrid function: %s',...
         mat2str(xOpt,5))
     fprintf('\n\nTurning over to hybrid function %s...\n\n',...
@@ -36,21 +33,21 @@ end
 if strcmp(func2str(HybridFcn),func2str(@fmincon)) && ...
         all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
         isempty([LB;UB]),isempty(nonlcon)])
-    if verbosity > 0
+    if options.Verbosity > 0
         msg = sprintf('Warning: %s does not accept problems without',...
             func2str(HybridFcn)) ;
         fprintf('%s constraints. Switching to fminunc.\n\n',msg)
-    end % if verbosity
+    end % if options.Verbosity
     HybridFcn = @fminunc ;
 elseif (strcmp(func2str(HybridFcn),func2str(@fminunc)) || ...
         strcmp(func2str(HybridFcn),func2str(@fminsearch))) && ...
         ~all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
         isempty([LB;UB]),isempty(nonlcon)])
-    if verbosity > 0
+    if options.Verbosity > 0
         msg = sprintf('Warning: %s does not accept problems with',...
             func2str(HybridFcn)) ;
         fprintf(0,'%s constraints. Switching to fmincon.\n\n',msg)
-    end % if verbosity
+    end % if options.Verbosity
     HybridFcn = @fmincon ;
 end
 
