@@ -1,5 +1,5 @@
-function state = psocreationuniform(options,nvars)
-% Generates uniformly distributed swarm based on options.PopInitRange.
+function state = psocreationbinary(options,nvars)
+% Generates uniformly distributed swarm consisting of binary bitstrings.
 
 n = options.PopulationSize ;
 itr = options.Generations ;
@@ -7,10 +7,7 @@ itr = options.Generations ;
 [state,nbrtocreate] = psogetinitialpopulation(options,n,nvars) ;
 
 % Initialize particle positions
-state.Population(n-nbrtocreate+1:n,:) = ...
-    repmat(options.PopInitRange(1,:),nbrtocreate,1) + ...
-    repmat((options.PopInitRange(2,:) - options.PopInitRange(1,:)),...
-    nbrtocreate,1).*rand(nbrtocreate,nvars) ;
+state.Population(n-nbrtocreate+1:n,:) = randi([0 1],nbrtocreate,nvars) ;
 
 % Initial particle velocities are zero by default (should be already set in
 % PSOGETINTIALPOPULATION).

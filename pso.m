@@ -163,8 +163,14 @@ if ~isempty(nonlcon) && strcmpi(options.ConstrBoundary,'reflect')
     options.ConstrBoundary = 'soft' ;
 end
 
-verbosity = 1 ; % For options.Display == 'final' (default)
-if strcmp(options.Display,'off'), verbosity = 0 ; end
+options.Verbosity = 1 ; % For options.Display == 'final' (default)
+if strncmpi(options.Display,'off',3)
+    options.Verbosity = 0 ;
+elseif strncmpi(options.Display,'iter',4)
+    options.Verbosity = 2 ;
+elseif strncmpi(options.Display,'diag',4)
+    options.Verbosity = 3 ;
+end
 
 % Is options.PopInitRange reconcilable with LB and UB constraints?
 % -------------------------------------------------------------------------
@@ -184,8 +190,24 @@ if ~isempty(LB) || ~isempty(UB)
 end
 % -------------------------------------------------------------------------
 
+% Check validity of VelocityLimit
+if all(~isfinite(options.VelocityLimit))
+    options.VelocityLimit = [] ;
+elseif isscalar(options.VelocityLimit)
+    options.VelocityLimit = repmat(options.VelocityLimit,1,nvars) ;
+elseif ~isempty(length(options.VelocityLimit)) && ...
+        ~isequal(length(options.VelocityLimit),nvars)
+    msg = 'options.VelocityLimit must be either a positive scalar' ;
+    error('%s, or a vector of size 1xnvars.',msg)
+end % if isscalar
+options.VelocityLimit = abs(options.VelocityLimit) ;
+
 % Generate swarm initial state (this line must not be moved)
-state = psocreationuniform(options,nvars) ;
+if strncmpi(options.PopulationType,'double',2)
+    state = psocreationuniform(options,nvars) ;
+elseif strncmpi(options.PopulationType,'bi',2)
+    state = psocreationbinary(options,nvars) ;
+end
 
 % Check initial population with respect to linear and nonlinear constraints
 % -------------------------------------------------------------------------
@@ -221,7 +243,7 @@ if ~isempty(options.PlotFcns)
         'Tag','Swarm Plots') ;
 end % if ~isempty
 
-if verbosity > 0, fprintf('\nSwarming...'), end
+if options.Verbosity > 0, fprintf('\nSwarming...'), end
 exitflag = 0 ; % Default exitflag, for max iterations reached.
 flag = 'init' ;
 
@@ -358,7 +380,7 @@ output.generations = k ; % Number of iterations performed
 clear state
 
 output.message = psogenerateoutputmessage(options,output,exitflag) ;
-if verbosity > 0, fprintf('\n\n%s\n',output.message) ; end
+if options.Verbosity > 0, fprintf('\n\n%s\n',output.message) ; end
 % -------------------------------------------------------------------------
 
 % Check for hybrid function, run if necessary
@@ -371,13 +393,13 @@ end
 
 % Wrap up
 % -------------------------------------------------------------------------
-if verbosity > 0
+if options.Verbosity > 0
     if exitflag == -1
         fprintf('\nBest point found: %s\n\n',mat2str(xOpt,5))
     else
         fprintf('\nFinal best point: %s\n\n',mat2str(xOpt,5))
     end
-end % if verbosity
+end % if options.Verbosity
 
 if ~nargout, clear all, end
 % -------------------------------------------------------------------------
