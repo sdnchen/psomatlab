@@ -1,6 +1,8 @@
 #summary List of new features under development
 #labels Phase-Requirements,Phase-Implementation
 
+[http://code.google.com/p/psomatlab/ Project Home]
+
 = Features under development =
 
 == Binary optimization ==
@@ -16,3 +18,5 @@ Some interest has been expressed regarding adding parallel computing capability 
 
   * The parallel-computing-enabled code must still run without errors or warnings even if the user doesn't have the Parallel Computing Toolbox installed and the option is turned off. This should be a fairly simple check using a few string comparisons and if/else branches.
   * A new SVN branch should probably be started to implement this feature.
+
+[http://code.google.com/p/psomatlab/ Project Home]
