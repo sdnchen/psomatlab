@@ -68,12 +68,12 @@ generate the options structure. Type {{{>> psooptimset}}} with no input or
 output arguments to display a list of available options and their
 default values.
 
-NOTE: the swarm will perform better if the PopInitRange option is defined
+NOTE: the swarm will perform better if the {{{PopInitRange}}} option is defined
 so that it closely bounds the expected domain of the feasible region.
 This is automatically done for lower and upper bound constraints, but not
 for linear and nonlinear constraints.
 
-NOTE 2: If options.HybridFcn is to be defined, and if it is necessary to
+NOTE 2: If {{{options.HybridFcn}}} is to be defined, and if it is necessary to
 pass a non-default options structure to the hybrid function, then the
 options structure may be included in a cell array along with the pointer
 to the hybrid function. Example:
@@ -94,7 +94,7 @@ Returns the fitness value of the best solution.
 
 {{{[x, fval,exitflag] = pso(...)}}}
 
-Returns information on outcome of pso run. Should match exitflag values
+Returns information on outcome of pso run. Should match {{{exitflag}}} values
 for GA where applicable, for code reuseability.
 
 {{{[x, fval,exitflag,output] = pso(...)}}}
