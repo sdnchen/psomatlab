@@ -1,4 +1,5 @@
 #summary Documentation for PSO function.
+#labels Featured
 
 = PSO =
 Find the minimum of a function using Particle Swarm Optimization.
