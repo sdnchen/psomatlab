@@ -103,7 +103,7 @@ The structure output contains more detailed information about the PSO
 run. Should match output fields of GA, where applicable.
 
 {{{[x, fval,exitflag,output,population] = pso(...)}}}
-A matrix population of size PopulationSize x nvars, with the locations of
+A matrix population of size !PopulationSize x nvars, with the locations of
 particles across the rows.
 
 {{{[x, fval,exitflag,output,population,scores] = pso(...)}}}
