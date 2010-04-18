@@ -1,6 +1,5 @@
 #summary List of new features under development
 #labels Phase-Requirements,Phase-Implementation
-#sidebar TableOfContents
 
 = Features under development =
 
