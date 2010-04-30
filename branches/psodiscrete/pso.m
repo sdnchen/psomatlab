@@ -1,7 +1,7 @@
 function [xOpt,fval,exitflag,output,population,scores] = ...
     pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,options)
 % Find the minimum of a function using Particle Swarm Optimization.
-%
+% 
 % This is an implementation of Particle Swarm Optimization algorithm using
 % the same syntax as the Genetic Algorithm Toolbox, with some additional
 % options specific to PSO. Allows code-reusability when trying different
@@ -9,14 +9,14 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % such as cross-over and mutation functions will not be applicable to the
 % PSO algorithm. Demo function included, with a small library of test
 % functions. Requires Optimization Toolbox.
-%
+% 
 % In development, new features will be added regularly until this is made
 % redundant by an official MATLAB PSO toolbox.
-%
+% 
 % S. Chen. Version 20100414.
 % Available from http://www.mathworks.com/matlabcentral/fileexchange/25986
 % Distributed under BSD license.
-%
+% 
 % Syntax:
 % psodemo
 % pso
@@ -32,39 +32,39 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % [x, fval,exitflag,output] = pso(...)
 % [x, fval,exitflag,output,population] = pso(...)
 % [x, fval,exitflag,output,population,scores] = pso(...)
-%
+% 
 % Description:
 % psodemo
 % Runs a demonstration of the PSO algorithm using test function specified
 % by user.
-%
+% 
 % pso
 % Runs a default demonstration using Rosenbrock's banana function.
-%
+% 
 % x = pso(fitnessfcn,nvars)
 % Runs the particle swarm algorithm with no constraints and default
 % options. fitnessfcn is a function handle, nvars is the number of
 % parameters to be optimized, i.e. the dimensionality of the problem.
-%
+% 
 % x = pso(fitnessfcn,nvars,Aineq,bineq)
 % Linear constraints, such that Aineq*x <= bineq. Soft boundaries only.
 % Aineq is a matrix of size nconstraints x nvars, while b is a column
 % vector of length nvars.
-%
+% 
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq)
 % Linear equality constraints, such that Aeq*x = beq. Soft boundaries only.
 % If no inequality constraints exist, set Aineq and bineq to [].
-%
+% 
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq,LB,UB)
 % Lower and upper bounds definted as LB and UB respectively. Use empty
 % arrays [] for A, b, Aeq, or beq if no linear constraints exist.
-%
+% 
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq,LB,UB,nonlcon)
 % Non-linear constraints. Nonlinear inequality constraints in the form c(x)
 % <= 0 have now been implemented using 'soft' boundaries only. See the
 % Optimization Toolbox documentation for the proper syntax for defining
 % nonlinear constraints.
-%
+% 
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,options)
 % Default algorithm parameters replaced with those defined in the options
 % structure:
@@ -72,12 +72,12 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % generate the options structure. Type >> psooptimset with no input or
 % output arguments to display a list of available options and their
 % default values.
-%
+% 
 % NOTE: the swarm will perform better if the PopInitRange option is defined
 % so that it closely bounds the expected domain of the feasible region.
 % This is automatically done for lower and upper bound constraints, but not
 % for linear and nonlinear constraints.
-%
+% 
 % NOTE 2: If options.HybridFcn is to be defined, and if it is necessary to
 % pass a non-default options structure to the hybrid function, then the
 % options structure may be included in a cell array along with the pointer
@@ -85,29 +85,29 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % >> % Let's say that we want to use fmincon to refine the result from PSO:
 % >> hybridoptions = optimset(@fmincon) ;
 % >> options.HybridFcn = {@fmincon, hybridoptions} ;
-%
+% 
 % x = pso(problem)
 % Parameters imported from problem structure. Should work, but no error
 % checking yet.
-%
+% 
 % [x, fval] = pso(...)
 % Returns the fitness value of the best solution.
-%
+% 
 % [x, fval,exitflag] = pso(...)
 % Returns information on outcome of pso run. Should match exitflag values
 % for GA where applicable, for code reuseability.
-%
+% 
 % [x, fval,exitflag,output] = pso(...)
 % The structure output contains more detailed information about the PSO
 % run. Should match output fields of GA, where applicable.
-%
+% 
 % [x, fval,exitflag,output,population] = pso(...)
 % A matrix population of size PopulationSize x nvars, with the locations of
 % particles across the rows.
-%
+% 
 % [x, fval,exitflag,output,population,scores] = pso(...)
 % Final scores of the particles in population.
-%
+% 
 % See also:
 % PSODEMO, PSOOPTIMSET.
 
@@ -147,22 +147,6 @@ end % if ~exist
 
 options = psooptimset(options) ;
 
-if ~exist('Aineq','var'), Aineq = [] ; end
-if ~exist('bineq','var'), bineq = [] ; end
-if ~exist('Aeq','var'), Aeq = [] ; end
-if ~exist('beq','var'), beq = [] ; end
-if ~exist('LB','var'), LB = [] ; end
-if ~exist('UB','var'), UB = [] ; end
-if ~exist('nonlcon','var'), nonlcon = [] ; end
-% Change this when nonlcon gets fully implemented:
-if ~isempty(nonlcon) && strcmpi(options.ConstrBoundary,'reflect')
-    msg = 'Non-linear constraints don''t have ''reflect'' boundaries' ;
-    warning('pso:main:nonlcon',...
-        '%s implemented. Changing options.ConstrBoundary to ''soft''.',...
-        msg)
-    options.ConstrBoundary = 'soft' ;
-end
-
 options.Verbosity = 1 ; % For options.Display == 'final' (default)
 if strncmpi(options.Display,'off',3)
     options.Verbosity = 0 ;
@@ -170,6 +154,33 @@ elseif strncmpi(options.Display,'iter',4)
     options.Verbosity = 2 ;
 elseif strncmpi(options.Display,'diag',4)
     options.Verbosity = 3 ;
+end
+
+if ~exist('Aineq','var'), Aineq = [] ; end
+if ~exist('bineq','var'), bineq = [] ; end
+if ~exist('Aeq','var'), Aeq = [] ; end
+if ~exist('beq','var'), beq = [] ; end
+if ~exist('LB','var'), LB = [] ; end
+if ~exist('UB','var'), UB = [] ; end
+if ~exist('nonlcon','var'), nonlcon = [] ; end
+% Check for constraints and bit string population type
+if strncmpi(options.PopulationType,'bitstring',2)
+    if ~isempty([Aineq,bineq]) || ~isempty([Aeq,beq]) || ...
+            ~isempty(nonlcon) || ~isempty([LB,UB])
+        Aineq = [] ; bineq = [] ; Aeq = [] ; beq = [] ; nonlcon = [] ;
+        LB = [] ; UB = [] ;
+        msg = sprintf('Warning: Constraints will be ignored') ;
+        msg = sprintf('%s for options.PopulationType ''bitstring''',msg) ;
+        disp(msg)
+    end
+end
+% Change this when nonlcon gets fully implemented:
+if ~isempty(nonlcon) && strcmpi(options.ConstrBoundary,'reflect')
+    msg = 'Non-linear constraints don''t have ''reflect'' boundaries' ;
+    warning('pso:main:nonlcon',...
+        '%s implemented. Changing options.ConstrBoundary to ''soft''.',...
+        msg)
+    options.ConstrBoundary = 'soft' ;
 end
 
 % Is options.PopInitRange reconcilable with LB and UB constraints?
