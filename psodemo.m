@@ -51,7 +51,10 @@ else
 end
 problem.options.PlotFcns = {@psoplotbestf,@psoplotswarmsurf} ;
 % problem.options.VelocityLimit = 0.2 ;
-problem.options.HybridFcn = @fmincon ;
+if isfield(problem.options,'PopulationType') && ...
+        ~strcmp(problem.options.PopulationType,'bitstring')
+    problem.options.HybridFcn = @fmincon ;
+end
 % problem.options.Display = 'off' ;
 
 pso(problem)
