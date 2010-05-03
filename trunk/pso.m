@@ -13,7 +13,7 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % In development, new features will be added regularly until this is made
 % redundant by an official MATLAB PSO toolbox.
 %
-% S. Chen. Version 20100414.
+% S. Chen. Version 20100503.
 % Available from http://www.mathworks.com/matlabcentral/fileexchange/25986
 % Distributed under BSD license.
 %
