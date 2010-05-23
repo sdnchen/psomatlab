@@ -38,8 +38,9 @@ function options = psooptimset(varargin)
 % in newopts with nonempty values overwrite the corresponding old
 % parameters in oldopts.
 %
-% Again, type psooptimset with no input arguments to display a list of
+% Again, type >> psooptimset with no input arguments to display a list of
 % options which may be set.
+%
 % NOTE regarding the ConstrBoundary option:
 % A 'soft' boundary allows particles to leave problem bounds, but sets
 % their fitness scores to Inf if they do. Other acceptable options are
@@ -134,6 +135,10 @@ if ~nargin || isequal(varargin{1},@pso)
 elseif isstruct(varargin{1})
     oldoptions = varargin{1} ;
     fieldsprovided = fieldnames(oldoptions) ;
+    if nargin == 2 && isstruct(varargin{2})
+        newoptions = varargin{2} ;
+        newfields = fieldnames(newoptions) ;
+    end
 end
 
 requiredfields = fieldnames(options) ;
@@ -153,6 +158,15 @@ for i = 1:size(requiredfields,1)
         if ~isempty(fieldidx)
             options.(requiredfields{i,1}) = ...
                 oldoptions.(fieldsprovided{fieldidx}) ;
+        end
+        if exist('newfields','var')
+            newfieldidx = find(cellfun(@(newfields)strcmp(newfields,...
+                requiredfields{i,1}),...
+                newfields)) ;
+            if ~isempty(newfieldidx)
+                options.(requiredfields{i,1}) = ...
+                    newoptions.(newfields{newfieldidx}) ;
+            end
         end
     end % if ~isempty
 end % for i

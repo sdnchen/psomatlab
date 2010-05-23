@@ -5,10 +5,16 @@ function psodemo(DemoMode)
 % For less intensive 3D graphics, run with input argument 'fast', viz.:
 % >> psodemo('fast')
 %
+% Note that PSODEMO was included as a quick way to showcase the behaviour
+% of the particle swarm on some commonly used optimizer test functions. To
+% use the particle swarm algorithm your own problems, use PSO, not PSODEMO.
+%
 % S. Chen, Dec 2009.
 % Available as part of "Another Particle Swarm Toolbox" at:
 % http://www.mathworks.com/matlabcentral/fileexchange/25986
 % Distributed under BSD license.
+%
+% See also: PSO
 
 workingdir = pwd ;
 testdir = ls('testf*') ;
