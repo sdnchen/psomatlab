@@ -72,13 +72,16 @@ ver 20100522:
 * Fixed a potential bug in PSOCREATIONUNIFORM where the number of particles to generate may be wrong if the user supplies a different number of initial particle velocities compared to initial positions.
 * If options.Display is set to 'off', a confirmation is no longer displayed by PSOCREATIONUNIFORM if initial particle positions or velocities are provided. These only appear if the display level is set to 'diagnose'.
 
+ver 20100522 + 1:
+
 To do (in no particular order):
+* Add a note in the documentation suggesting that social and cognitive attraction parameters should have a sum of less than 4, as demonstrated by Perez 2007. Code a warning dialogue if the user defines an unstable swarm.
+* New constraint enforcement method: 'penalize', described in Perez 2007.
 * A demonstration of a binary optimization solution.
 * An output function defined by options.OutputFcns that can save current swarm state in a file which can be reloaded later as a problem structure, in case of a system crash.
 * Ability to define neighborhoods of particles to determine non-local best positions (social parameter).
   - Social stereotyping using clustering algorithm (Kennedy 2000)
   - Von Neumann topology (Kennedy 2002)
-* New constraint enforcement method: 'penalize', described in Perez 2007.
 * Ability to solve problems with discrete parameters
 * New convergence criterion: isothermal equilibrium (Mikki 2008, Chapter 3).
 * Clerc's method: constriction factor chi to prevent explosive divergence of swarm.
