@@ -202,6 +202,7 @@ end
 % -------------------------------------------------------------------------
 
 % Check validity of VelocityLimit
+% -------------------------------------------------------------------------
 if all(~isfinite(options.VelocityLimit))
     options.VelocityLimit = [] ;
 elseif isscalar(options.VelocityLimit)
@@ -219,6 +220,7 @@ if strncmpi(options.PopulationType,'double',2)
 elseif strncmpi(options.PopulationType,'bi',2)
     state = psocreationbinary(options,nvars) ;
 end
+% -------------------------------------------------------------------------
 
 % Check initial population with respect to linear and nonlinear constraints
 % -------------------------------------------------------------------------
@@ -272,8 +274,8 @@ for k = 1:itr
     % ---------------------------------------------------------------------
     if ~all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
             isempty([LB;UB]), isempty(nonlcon)])
-        state = psocheckbounds(options,state,Aineq,bineq,Aeq,beq,...
-            LB,UB,nonlcon) ;
+        state = psocheckbounds(state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,...
+            options) ;
     end % if ~isempty
     % ---------------------------------------------------------------------
     

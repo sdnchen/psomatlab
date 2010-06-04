@@ -1,5 +1,5 @@
 function state = ...
-    psocheckbounds(options,state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon)
+    psocheckbounds(state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,options)
 % Check the the swarm population against boundary and linear constraints.
 
 x = state.Population ;
@@ -12,7 +12,8 @@ for i = 1:size(state.Population,1)
     if ~isempty(LB), lowindex = x(i,:) < LB ; end
     if ~isempty(UB), highindex = x(i,:) > UB ; end
     % Three constraint types
-    if strcmpi(options.ConstrBoundary,'soft')
+    if strcmpi(options.ConstrBoundary,'soft') || ...
+            strcmpi(options.ConstrBoundary,'penalize')
         outofbounds = any([lowindex,highindex]) ;
         if ~outofbounds && ~isempty(Aineq)
             outofbounds = any(Aineq*x(i,:)' - bineq > options.TolCon) ;
