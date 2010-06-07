@@ -246,6 +246,21 @@ if ~isempty(Aeq) || ~isempty(Aineq) || ~isempty(nonlcon)
 end
 % -------------------------------------------------------------------------
 
+% Check constraint type
+% -------------------------------------------------------------------------
+if isa(options.ConstrBoundary,'function_handle')
+    boundcheckfcn = options.ConstrBoundary ;
+elseif strcmpi(options.ConstrBoundary,'soft')
+    boundcheckfcn = @psoboundssoft ;
+elseif strcmpi(options.ConstrBoundary,'penalize')
+    boundcheckfcn = @psoboundspenalize ;
+elseif strcmpi(options.ConstrBoundary,'reflect')
+    boundcheckfcn = @psoboundsreflect ;
+elseif strcmpi(options.ConstrBoundary,'absorb')
+    boundcheckfcn = @psoboundsabsorb ;
+end
+% -------------------------------------------------------------------------
+
 n = options.PopulationSize ;
 itr = options.Generations ;
 
@@ -274,7 +289,7 @@ for k = 1:itr
     % ---------------------------------------------------------------------
     if ~all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
             isempty([LB;UB]), isempty(nonlcon)])
-        state = psocheckbounds(state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,...
+        state = boundcheckfcn(state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,...
             options) ;
     end % if ~isempty
     % ---------------------------------------------------------------------
