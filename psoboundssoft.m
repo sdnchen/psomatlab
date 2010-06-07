@@ -1,13 +1,8 @@
 function state = ...
-    psoboundspenalize(state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,options)
-% This is like "soft" boundaries, except that some kind of penalty value
-% must be calculated from the degree of each constraint violation.
+    psoboundssoft(state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,options)
 
 x = state.Population ;
 % v = state.Velocities ;
-
-state.OutOfBounds = false(size(state.Population,1),1) ;
-state.Penalty = zeros(size(state.Population,1),1) ;
 
 for i = 1:size(state.Population,1)
     lowindex = [] ; highindex = [] ;
@@ -28,11 +23,7 @@ for i = 1:size(state.Population,1)
     end
     
     if outofbounds
-        if strcmpi(options.ConstrBoundary,'soft')
-            state.Score(i) = inf ;
-        elseif strcmpi(options.ConstrBoundary,'penalize')
-            state.Penalty = psocalculatepenalty(state) ;
-        end
+        state.Score(i) = inf ;
     end % if outofbounds
     
     state.OutOfBounds(i) = outofbounds ;
