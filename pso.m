@@ -254,6 +254,7 @@ elseif strcmpi(options.ConstrBoundary,'soft')
     boundcheckfcn = @psoboundssoft ;
 elseif strcmpi(options.ConstrBoundary,'penalize')
     boundcheckfcn = @psoboundspenalize ;
+    state.Penalty = zeros(options.PopulationSize,1) ;
 elseif strcmpi(options.ConstrBoundary,'reflect')
     boundcheckfcn = @psoboundsreflect ;
 elseif strcmpi(options.ConstrBoundary,'absorb')
@@ -275,11 +276,14 @@ if options.Verbosity > 0, fprintf('\nSwarming...'), end
 exitflag = 0 ; % Default exitflag, for max iterations reached.
 flag = 'init' ;
 
-% Iterate swarm
 state.fitnessfcn = fitnessfcn ;
 state.LastImprovement = 1 ;
 state.ParticleInertia = 0.9 ; % Initial inertia
+state.OutOfBounds = false(options.PopulationSize,1) ;
 % alpha = 0 ;
+
+
+% Iterate swarm
 for k = 1:itr
     state.Score = inf*ones(n,1) ; % Reset fitness vector
     state.Generation = k ;
@@ -287,14 +291,15 @@ for k = 1:itr
     
     % Check bounds before proceeding
     % ---------------------------------------------------------------------
-    if ~all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
+    if ~isequal(boundcheckfcn,@psoboundspenalize) && ...
+            ~all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
             isempty([LB;UB]), isempty(nonlcon)])
         state = boundcheckfcn(state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,...
             options) ;
     end % if ~isempty
     % ---------------------------------------------------------------------
     
-    % Evaluate fitness, update the local bests
+    % Evaluate fitness
     % ---------------------------------------------------------------------
     if strcmpi(options.Vectorized,'off')
         for i = setdiff(1:n,find(state.OutOfBounds))
@@ -305,7 +310,20 @@ for k = 1:itr
             fitnessfcn(state.Population(setdiff(1:n,...
             find(state.OutOfBounds)),:)) ;
     end % if strcmpi
+    % ---------------------------------------------------------------------
     
+    % Check bounds before proceeding ('penalize' needs special treatment)
+    % ---------------------------------------------------------------------
+    if  isequal(boundcheckfcn,@psoboundspenalize) && ...
+            ~all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
+            isempty([LB;UB]), isempty(nonlcon)])
+        state = boundcheckfcn(state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,...
+            options) ;
+    end % if ~isempty
+    % ---------------------------------------------------------------------
+    
+    % Update the local bests
+    % ---------------------------------------------------------------------
     betterindex = state.Score < state.fLocalBests ;
     state.fLocalBests(betterindex) = state.Score(betterindex) ;
     state.xLocalBests(betterindex,:) = ...
@@ -335,7 +353,7 @@ for k = 1:itr
             exitflag = 2 ;
             flag = 'done' ;
         end % if k
-    else % No improvement from last iteration
+    elseif k > 1 % No improvement from last iteration
         state.fGlobalBest(k) = state.fGlobalBest(k-1) ;
     end % if minfitness
     
