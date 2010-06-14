@@ -15,7 +15,7 @@ if strcmp(x,'init')
     f.options.PopInitRange = [-2, -2; 2, 2] ;
     f.options.KnownMin = [1,1] ;
     f.options.PopulationSize = 100 ;
-    f.options.ConstrBoundary = 'soft' ;
+    f.options.ConstrBoundary = 'penalize' ;
 else
     x = reshape(x,1,[]) ;
     if size(x,2) >= 2
