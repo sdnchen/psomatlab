@@ -6,6 +6,7 @@ function y = rastriginsfcn(x)
 
 if strcmp(x,'init')
     y.Aineq = [] ; y.bineq = [] ;
+%     y.Aeq = [2 3] ; y.beq = [-5.45] ;
     y.Aeq = [] ; y.beq = [] ;
     y.LB = [-4,-4] ; y.UB = [4,4] ;
     y.nonlcon = [] ;
@@ -13,7 +14,7 @@ if strcmp(x,'init')
     y.options.KnownMin = [0,0] ;
     y.options.PopulationSize = 100 ;
     y.options.Vectorized = 'on' ;
-    y.options.ConstrBoundary = 'absorb' ;
+    y.options.ConstrBoundary = 'penalize' ;
 %     y.options.InitialPopulation = rand(100,2) ;
 %     y.options.InitialVelocities = repmat([-1,0],100,1) ;
 else

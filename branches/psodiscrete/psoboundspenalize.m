@@ -12,12 +12,15 @@ state.Penalty = zeros(size(state.Population,1),1) ;
 if ~isempty(nonlcon)
     [ctest,ceqtest] = nonlcon(zeros(1,options.PopulationSize)) ;
     ctest = ctest(:) ; ceqtest = ceqtest(:) ;
+    nnonl = size([ctest;ceqtest],1) ;
+else
+    nnonl = 0 ;
 end
 
 nLB = size(LB,2) ;
 nUB = size(UB,2) ;
 nineq = size(Aineq,1) ; neq = size(Aeq,1) ;
-nnonl = size([ctest;ceqtest],1) ;
+
 nconstr = nLB + nUB + nineq + neq + nnonl ;
 f = abs(mean(state.Score)) ;
 g = zeros(options.PopulationSize,nconstr) ;
@@ -25,12 +28,12 @@ g = zeros(options.PopulationSize,nconstr) ;
 for i = 1:options.PopulationSize
     if ~isempty(LB)
         g(i,1:nLB) = max([LB - x(i,:) - options.TolCon ;
-            zeros(1,options.PopulationSize)]) ;
+            zeros(1,size(state.Population,2))]) ;
     end
     
     if ~isempty(UB)
         g(i,nLB+1:nLB+nUB) = max([x(i,:) - UB  - options.TolCon ;
-            zeros(1,options.PopulationSize)]) ;
+            zeros(1,size(state.Population,2))]) ;
     end
     
     if ~isempty(Aineq) % Check linear inequalities
