@@ -43,16 +43,39 @@ function options = psooptimset(varargin)
 %
 % NOTE regarding the ConstrBoundary option:
 % A 'soft' boundary allows particles to leave problem bounds, but sets
-% their fitness scores to Inf if they do. Other acceptable options are
-% 'reflect' and 'absorb', which prevents them from travelling outside the
-% problem bounds at all.
+% their fitness scores to Inf if they do. This can save time, since
+% infeasible points are not evaluated. Other acceptable options are
+% 'penalize', 'reflect', and 'absorb',
+% The 'penalize' option as described in Perez 2007 is the default since it
+% seems to provide the best combination of performance and versatility.
+% The 'reflect' and 'absorb' options prevent the particles from travelling
+% outside the problem bounds at all. However, 'reflect' has only been
+% implemented for bounded constraints, and 'absorb' may suffer from poor
+% performance if linear or nonlinear equality constraints are used.
+%
+% NOTE regarding cognitive and social attraction parameters:
+% Perez and Behdinan (2007) demonstrated that the particle swarm is only
+% stable if the following conditions are satisfied:
+% Given that C0 = particle inertia
+%            C1 = options.SocialAttraction
+%            C2 = options.CognitiveAttraction
+%    1) 0 < (C1 + C2) < 4
+%    2) (C1 + C2)/2 - 1 < C0 < 1
+% If conditions 1 and 2 are satisfied, the system will be guaranteed to
+% converge to a stable equilibrium point. However, whether or not this
+% point is actually the global minimum cannot be guaranteed, and its
+% acceptability as a solution should be verified by the user.
+%
+% Bibliography
+% RE Perez and K Behdinan. "Particle swarm approach for structural
+% design optimization." Computers and Structures, Vol. 85:1579-88, 2007.
 %
 % See also:
-% pso, psodemo
+% PSO, PSODEMO
 
 % Default options
 options.CognitiveAttraction = 0.5 ;
-options.ConstrBoundary = 'soft' ; 
+options.ConstrBoundary = 'penalize' ; 
 options.DemoMode = 'off' ;
 options.Display = 'final' ;
 options.FitnessLimit = -inf ;
@@ -78,7 +101,7 @@ if ~nargin && ~nargout
     fprintf('\n')
     fprintf('CognitiveAttraction: [Positive scalar | {%g}]\n',...
         options.CognitiveAttraction) ;
-    fprintf('     ConstrBoundary: [soft | reflect | absorb | {''%s''}]\n',...
+    fprintf('     ConstrBoundary: [soft | reflect | absorb | penalize | {''%s''}]\n',...
         options.ConstrBoundary) ;
     fprintf('            Display: [''off'' | ''final'' | {''%s''}]\n',...
         options.Display) ;

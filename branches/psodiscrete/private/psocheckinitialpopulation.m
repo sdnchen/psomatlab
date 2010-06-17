@@ -9,8 +9,8 @@ if exist('linprog','file') ~= 2
     msg = sprintf('%s Toolbox. Ignoring (non)linear constraints ',msg) ;
     msg = sprintf('%s for initial population distribution and',msg) ;
     warning('pso:linearconstraints:missingtoolbox',...
-        '%s setting constraint behavior to ''soft''.',msg)
-    options.ConstrBoundary = 'soft' ;
+        '%s setting constraint behavior to ''penalize''.',msg)
+    options.ConstrBoundary = 'penalize' ;
     return
 end
 
@@ -18,11 +18,11 @@ end
 vv = ver ;
 vernos = {vv.Version} ;
 if str2double(vernos{find(strcmpi({vv.Name},'MATLAB'))}) < 7.7
-    state.LinprogOptions = optimset('Simplex','off',...
+    LinprogOptions = optimset('Simplex','off',...
         'LargeScale','off',...
         'Display','off') ;
 else
-    state.LinprogOptions = optimset('Simplex','off',...
+    LinprogOptions = optimset('Simplex','off',...
         'LargeScale','off',...
         'Algorithm','active-set',...
         'Display','off') ;
@@ -41,7 +41,7 @@ for i = 1:size(state.Population,1)
             [newpoint,unused,exitflag] = ...
                 linprog([],Aineq,bineq,Aeq,beq,LB,UB,...
                 state.Population(i,:),...
-                state.LinprogOptions) ;
+                LinprogOptions) ;
             clear unused
             if exitflag == -2
                 error('Problem is infeasible due to constraints')
@@ -62,9 +62,9 @@ for i = 1:size(state.Population,1)
             msg = '''Soft'' boundaries don''t work with nonlinear' ;
             msg = sprintf('%s equality constraints.',msg) ;
             warning('pso:initpop:nonlcon',...
-                '%s Changing options.ConstrBoundary to ''absorb''.',...
+                '%s Changing options.ConstrBoundary to ''penalize''.',...
                 msg)
-            options.ConstrBoundary = 'absorb' ;
+            options.ConstrBoundary = 'penalize' ;
         end
         
         if isempty(ceq) && isempty(Aeq)
@@ -87,7 +87,6 @@ for i = 1:size(state.Population,1)
                 end
             end % while any
         elseif any(c > options.TolCon) || any(abs(ceq) > options.TolCon)
-%         if any(c > options.TolCon) || any(abs(ceq) > options.TolCon)
             % Random point rejection is much faster, and produces
             % a more uniform distribution of points within the bounded
             % region. However, using fmincon to find acceptable points will
@@ -97,7 +96,7 @@ for i = 1:size(state.Population,1)
             % the initial points from accumulating near the boundaries.
             [newpoint,unused,exitflag] = ...
                 fmincon(@void,state.Population(i,:),...
-                Aineq,bineq,Aeq,beq,LB,UB,nonlcon,state.LinprogOptions) ;
+                Aineq,bineq,Aeq,beq,LB,UB,nonlcon,LinprogOptions) ;
             clear unused
             if exitflag == -2
                 error('Problem is infeasible due to nonlinear constraints')

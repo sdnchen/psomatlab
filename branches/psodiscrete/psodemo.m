@@ -60,4 +60,6 @@ problem.options.PlotFcns = {@psoplotbestf,@psoplotswarmsurf} ;
 problem.options.HybridFcn = @fmincon ;
 % problem.options.Display = 'off' ;
 
+tic
 pso(problem)
+toc

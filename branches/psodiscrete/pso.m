@@ -61,8 +61,8 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % 
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq,LB,UB,nonlcon)
 % Non-linear constraints. Nonlinear inequality constraints in the form c(x)
-% <= 0 have now been implemented using 'soft' boundaries only. See the
-% Optimization Toolbox documentation for the proper syntax for defining
+% <= 0 have now been implemented using 'soft' or 'penalize' boundaries. See
+% the Optimization Toolbox documentation for the proper syntax for defining
 % nonlinear constraints.
 % 
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,options)
@@ -85,6 +85,19 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % >> % Let's say that we want to use fmincon to refine the result from PSO:
 % >> hybridoptions = optimset(@fmincon) ;
 % >> options.HybridFcn = {@fmincon, hybridoptions} ;
+%
+% NOTE 3:
+% Perez and Behdinan (2007) demonstrated that the particle swarm is only
+% stable if the following conditions are satisfied:
+% Given that C0 = particle inertia
+%            C1 = options.SocialAttraction
+%            C2 = options.CognitiveAttraction
+%    1) 0 < (C1 + C2) < 4
+%    2) (C1 + C2)/2 - 1 < C0 < 1
+% If conditions 1 and 2 are satisfied, the system will be guaranteed to
+% converge to a stable equilibrium point. However, whether or not this
+% point is actually the global minimum cannot be guaranteed, and its
+% acceptability as a solution should be verified by the user.
 % 
 % x = pso(problem)
 % Parameters imported from problem structure. Should work, but no error
@@ -107,9 +120,18 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % 
 % [x, fval,exitflag,output,population,scores] = pso(...)
 % Final scores of the particles in population.
+%
+% Bibliography
+% J Kennedy, RC Eberhart, YH Shi. Swarm Intelligence. Academic Press, 2001.
+%
+% SM Mikki, AA Kishk. Particle Swarm Optimization: A Physics-Based
+% Approach. Morgan & Claypool, 2008.
+%
+% RE Perez and K Behdinan. "Particle swarm approach for structural
+% design optimization." Computers and Structures, Vol. 85:1579-88, 2007.
 % 
 % See also:
-% PSODEMO, PSOOPTIMSET.
+% PSODEMO, PSOOPTIMSET, PSOBINARY.
 
 if ~nargin % Rosenbrock's banana function by default, as a demonstration
     fitnessfcn = @(x)100*(x(2)-x(1)^2)^2+(1-x(1))^2 ;
@@ -148,7 +170,7 @@ end % if ~exist
 options = psooptimset(options) ;
 
 options.Verbosity = 1 ; % For options.Display == 'final' (default)
-if strncmpi(options.Display,'off',3)
+if strcmpi(options.Display,'off')
     options.Verbosity = 0 ;
 elseif strncmpi(options.Display,'iter',4)
     options.Verbosity = 2 ;
@@ -163,25 +185,42 @@ if ~exist('beq','var'), beq = [] ; end
 if ~exist('LB','var'), LB = [] ; end
 if ~exist('UB','var'), UB = [] ; end
 if ~exist('nonlcon','var'), nonlcon = [] ; end
-% Check for constraints and bit string population type
-if strncmpi(options.PopulationType,'bitstring',2)
-    if ~isempty([Aineq,bineq]) || ~isempty([Aeq,beq]) || ...
-            ~isempty(nonlcon) || ~isempty([LB,UB])
-        Aineq = [] ; bineq = [] ; Aeq = [] ; beq = [] ; nonlcon = [] ;
-        LB = [] ; UB = [] ;
-        msg = sprintf('Warning: Constraints will be ignored') ;
-        msg = sprintf('%s for options.PopulationType ''bitstring''',msg) ;
-        disp(msg)
-    end
+
+% Check for swarm stability
+% -------------------------------------------------------------------------
+if options.SocialAttraction + options.CognitiveAttraction >= 4
+    msg = 'Warning: Swarm is unstable and may not converge ' ;
+    msg = [msg 'since the sum of the cognitive and social attraction'] ;
+    msg = [msg ' parameters is greater than or equal to 4.'] ;
+    msg = [msg ' Suggest adjusting options.CognitiveAttraction and/or'] ;
+    sprintf('%s options.SocialAttraction.',msg)
 end
+% -------------------------------------------------------------------------
+
+% Check for constraints and bit string population type
+% -------------------------------------------------------------------------
+if strncmpi(options.PopulationType,'bitstring',2) && ...
+        (~isempty([Aineq,bineq]) || ~isempty([Aeq,beq]) || ...
+        ~isempty(nonlcon) || ~isempty([LB,UB]))
+    Aineq = [] ; bineq = [] ; Aeq = [] ; beq = [] ; nonlcon = [] ;
+    LB = [] ; UB = [] ;
+    msg = sprintf('Warning: Constraints will be ignored') ;
+    msg = sprintf('%s for options.PopulationType ''bitstring''',msg) ;
+    disp(msg)
+end
+% -------------------------------------------------------------------------
+
 % Change this when nonlcon gets fully implemented:
+% -------------------------------------------------------------------------
 if ~isempty(nonlcon) && strcmpi(options.ConstrBoundary,'reflect')
     msg = 'Non-linear constraints don''t have ''reflect'' boundaries' ;
+    msg = [msg, ' implemented yet.'] ;
     warning('pso:main:nonlcon',...
-        '%s implemented. Changing options.ConstrBoundary to ''soft''.',...
+        '%s Changing options.ConstrBoundary to ''penalize''.',...
         msg)
-    options.ConstrBoundary = 'soft' ;
+    options.ConstrBoundary = 'penalize' ;
 end
+% -------------------------------------------------------------------------
 
 % Is options.PopInitRange reconcilable with LB and UB constraints?
 % -------------------------------------------------------------------------
@@ -263,7 +302,6 @@ end
 % -------------------------------------------------------------------------
 
 n = options.PopulationSize ;
-itr = options.Generations ;
 
 if ~isempty(options.PlotFcns)
     close(findobj('Tag','Swarm Plots','Type','figure'))
@@ -284,7 +322,7 @@ state.OutOfBounds = false(options.PopulationSize,1) ;
 
 
 % Iterate swarm
-for k = 1:itr
+for k = 1:options.Generations
     state.Score = inf*ones(n,1) ; % Reset fitness vector
     state.Generation = k ;
     state.OutOfBounds = false(options.PopulationSize,1) ;
@@ -367,9 +405,8 @@ for k = 1:itr
     
     % Update flags, state and plots before updating positions
     % ---------------------------------------------------------------------
-    if k == 2
-        flag = 'iter' ;
-    elseif k == itr
+    if k == 2, flag = 'iter' ; end
+    if k == options.Generations
         flag = 'done' ;
         exitflag = 0 ;
     end
