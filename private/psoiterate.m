@@ -10,6 +10,9 @@ C2 = options.SocialAttraction ; % Global (overall best point)
 n = size(state.Population,1) ;
 nvars = size(state.Population,2) ;
 
+lowerinertia = (C1 + C2)/2 - 1 ;
+upperinertia = max(0.9,lowerinertia) ;
+
 % Random number seed
 R1 = rand(n,nvars) ;
 R2 = rand(n,nvars) ;
@@ -33,7 +36,8 @@ elseif strncmpi(options.PopulationType,'bi',2) % Bit string
 end
 
 % Update behavioral parameters: reduced inertial term
-state.ParticleInertia = 0.9 - 0.2*(state.Generation-1)/ ...
+state.ParticleInertia = upperinertia - ...
+    lowerinertia*(state.Generation-1) / ...
     (options.Generations-1) ;
 
 function state = checkmaxvelocities(state,options)
