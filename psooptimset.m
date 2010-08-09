@@ -74,8 +74,8 @@ function options = psooptimset(varargin)
 % PSO, PSODEMO
 
 % Default options
-options.CognitiveAttraction = 0.5 ;
-options.ConstrBoundary = 'penalize' ; 
+options.CognitiveAttraction = 0.7 ;
+options.ConstrBoundary = 'soft' ; 
 options.DemoMode = 'off' ;
 options.Display = 'final' ;
 options.FitnessLimit = -inf ;
@@ -90,7 +90,7 @@ options.PlotInterval = 1 ;
 options.PopInitRange = [0;1] ;
 options.PopulationSize = 40 ;
 options.PopulationType = 'doubleVector' ;
-options.SocialAttraction = 1.5 ;
+options.SocialAttraction = 1.25 ;
 options.StallGenLimit = 50 ;
 options.TolCon = 1e-6 ;
 options.TolFun = 1e-6 ;
@@ -99,9 +99,10 @@ options.VelocityLimit = [] ;
 
 if ~nargin && ~nargout
     fprintf('\n')
+    fprintf('Available options for PSOOPTIMSET {defaults}:\n\n')
     fprintf('CognitiveAttraction: [Positive scalar | {%g}]\n',...
         options.CognitiveAttraction) ;
-    fprintf('     ConstrBoundary: [soft | reflect | absorb | penalize | {''%s''}]\n',...
+    fprintf('     ConstrBoundary: [''soft'' | ''reflect'' | ''absorb'' | {''%s''}]\n',...
         options.ConstrBoundary) ;
     fprintf('            Display: [''off'' | ''final'' | {''%s''}]\n',...
         options.Display) ;
