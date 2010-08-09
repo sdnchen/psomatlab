@@ -4,8 +4,8 @@ function f = griewangksfcn(x)
 % template for future use.
 
 if strcmp(x,'init')
-    f.PopInitRange = [-600; 600] ;
-%     f.PopInitRange = [-2; 2] ;
+%     f.PopInitRange = [-600; 600] ;
+    f.PopInitRange = [-2; 2] ;
     f.KnownMin = [0,0] ;
     f.Vectorized = 'on' ;
 else

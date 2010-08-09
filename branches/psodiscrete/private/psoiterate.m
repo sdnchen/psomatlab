@@ -10,7 +10,8 @@ C2 = options.SocialAttraction ; % Global (overall best point)
 n = size(state.Population,1) ;
 nvars = size(state.Population,2) ;
 
-lowerinertia = (C1 + C2)/2 - 1 ;
+% lowerinertia = (C1 + C2)/2 - 1 ;
+lowerinertia = 0.4 ;
 upperinertia = max(0.9,lowerinertia) ;
 
 % Random number seed
