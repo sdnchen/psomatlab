@@ -72,9 +72,12 @@ ver 20100522:
 * Fixed a potential bug in PSOCREATIONUNIFORM where the number of particles to generate may be wrong if the user supplies a different number of initial particle velocities compared to initial positions.
 * If options.Display is set to 'off', a confirmation is no longer displayed by PSOCREATIONUNIFORM if initial particle positions or velocities are provided. These only appear if the display level is set to 'diagnose'.
 
-ver 20100809:
+ver 20100522:
 * Add a note in the documentation suggesting that social and cognitive attraction parameters should have a sum of less than 4, as demonstrated by Perez 2007. A warning message appears (but the optimization continues) if the user defines an unstable swarm.
-* Minor performance improvements, updated the way that the inertial weight decays.
+* Minor performance and robustness improvements
+* User can now define custom swarm acceleration function using the 'AccelerationFcn' option in PSOOPTIMSET
+* Setting an output function through options.OutputFcns now works properly
+* Easter egg: if you have the original Starcraft installed in its default directory, try setting options.OutputFcns to @psoeasteregg
 
 To do (in no particular order):
 * New constraint enforcement method: 'penalize', described in Perez 2007. With this method, convergence should be significantly faster, especially for equality constraints.
