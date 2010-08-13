@@ -17,14 +17,14 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % is 'bitstring'.
 %
 % This has exactly the same effect as setting the appropriate options
-% manually, except that it is not possible to unintentionally define
-% constraints, which would be ignored by the binary variable optimizer
-% anyway.
+% manually for PSO, except that it is not possible to unintentionally
+% define constraints, which would be ignored by the binary variable
+% optimizer anyway.
 %
 % Problems with hybrid variables (double-precision and bit-string
 % combined) cannot be solved yet.
 %
-% The output variables for PSOBINARY is the same as for PSO.
+% The output variables for PSOBINARY are the same as for PSO.
 %
 % See also:
 % PSO, PSOOPTIMSET, PSODEMO

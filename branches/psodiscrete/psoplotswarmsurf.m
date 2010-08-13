@@ -7,7 +7,7 @@ function state = psoplotswarmsurf(options,state,flag)
 notinf = isfinite(state.Score') ;
 % notinf = ~state.OutOfBounds ;
 if isfield(state,'Penalty')
-    particleHeights = state.Score(notinf)' - state.Penalty(notinf)' ;
+    particleHeights = state.Score(notinf)' ; %- state.Penalty(notinf)' ;
 else
     particleHeights = state.Score(notinf)' ;
 end
