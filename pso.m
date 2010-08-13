@@ -143,6 +143,7 @@ if ~nargin % Rosenbrock's banana function by default, as a demonstration
     options.Generations = 200 ;
     options.DemoMode = 'on' ;
     options.KnownMin = [1 1] ;
+    options.OutputFcns = {} ;
 elseif isstruct(fitnessfcn)
     nvars = fitnessfcn.nvars ;
     Aineq = fitnessfcn.Aineq ;
@@ -235,6 +236,8 @@ end
 % LB and UB?
 if ~isempty(LB) || ~isempty(UB)
     options.LinearConstr.type = 'boundconstraints' ;
+    if isempty(LB), LB = -inf*ones(1,nvars) ; end
+    if isempty(UB), UB =  inf*ones(1,nvars) ; end
     options.PopInitRange = ...
         psocheckpopulationinitrange(options.PopInitRange,LB,UB) ;
 end
@@ -294,6 +297,7 @@ elseif strcmpi(options.ConstrBoundary,'soft')
 elseif strcmpi(options.ConstrBoundary,'penalize')
     boundcheckfcn = @psoboundspenalize ;
     state.Penalty = zeros(options.PopulationSize,1) ;
+    state.PreviouslyFeasible = true(options.PopulationSize,1) ;
 elseif strcmpi(options.ConstrBoundary,'reflect')
     boundcheckfcn = @psoboundsreflect ;
 elseif strcmpi(options.ConstrBoundary,'absorb')
@@ -432,15 +436,23 @@ for k = 1:options.Generations
             else
                 subplot(haxes(i))
             end % if strcmpi
-            state = options.PlotFcns{i}(options,state,flag) ;
+            if iscell(options.PlotFcns)
+                state = options.PlotFcns{i}(options,state,flag) ;
+            else
+                state = options.PlotFcns(options,state,flag) ;
+            end
         end % for i
         drawnow
     end % if ~isempty
     
     if ~isempty(options.OutputFcns) && ~mod(k,options.PlotInterval)
-        for i = 1:length(options.Output)
-            state = options.OutputFcns{i}(options,state,flag) ;
-        end % for i
+        if iscell(options.OutputFcns)
+            for i = 1:length(options.OutputFcns)
+                state = options.OutputFcns{i}(options,state,flag) ;
+            end % for i
+        else
+            state = options.OutputFcns(options,state,flag) ;
+        end
     end % if ~isempty
     
     if strcmpi(flag,'done')
@@ -449,7 +461,7 @@ for k = 1:options.Generations
     % ---------------------------------------------------------------------
     
     % Update the particle velocities and positions
-    state = psoiterate(state,options) ;
+    state = options.AccelerationFcn(options,state,flag) ;
 end % for k
 
 % Assign output variables and generate output
@@ -483,6 +495,8 @@ if options.Verbosity > 0
         fprintf('\nFinal best point: %s\n\n',mat2str(xOpt,5))
     end
 end % if options.Verbosity
+
+% psoeasteregg(options,state,flag) ;
 
 if ~nargout, clear all, end
 % -------------------------------------------------------------------------

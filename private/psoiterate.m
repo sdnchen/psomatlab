@@ -1,4 +1,4 @@
-function state = psoiterate(state,options)
+function [state,flag] = psoiterate(options,state,flag)
 % Updates swarm positions and velocities. Called to iterate the swarm from
 % the main PSO function. This function can handle binary and double-vector
 % "genomes".

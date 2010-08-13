@@ -5,6 +5,7 @@ function [c,ceq] = quadrifolium(x)
 % Weisstein, Eric W. "Quadrifolium." From MathWorld--A Wolfram Web
 % Resource. http://mathworld.wolfram.com/Quadrifolium.html
 
+x = x + 0.2 ;
 a = 2 ;
 c = (x(1)^2 + x(2)^2)^3 - 4*a*x(1)^2*x(2)^2 ;
 ceq = [] ;

@@ -6,11 +6,11 @@ function f = nonlinearconstrdemo(x)
 % options = rosenbrocksfcn('init')
 
 if strcmp(x,'init')
-    f.Aineq = [] ;
-    f.bineq = [] ;
+    f.Aineq = [1 1] ;
+    f.bineq = [0.25] ;
     f.Aeq = [] ;
     f.beq = [] ;
-    f.LB = [] ; f.UB = [] ;
+    f.LB = [] ; f.UB = [inf, -0.5] ;
     f.nonlcon = 'quadrifolium' ; % Could also use 'heart' or 'unitdisk'
     f.options.PopInitRange = [-2, -2; 2, 2] ;
     f.options.KnownMin = [1,1] ;

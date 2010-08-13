@@ -74,8 +74,11 @@ function options = psooptimset(varargin)
 % PSO, PSODEMO
 
 % Default options
-options.CognitiveAttraction = 0.7 ;
-options.ConstrBoundary = 'soft' ; 
+options.CognitiveAttraction = 0.5 ;
+options.ConstrBoundary = 'penalize' ; 
+options.AccelerationFcn = @psoiterate ;
+options.CognitiveAttraction = 0.5 ;
+options.ConstrBoundary = 'penalize' ; 
 options.DemoMode = 'off' ;
 options.Display = 'final' ;
 options.FitnessLimit = -inf ;
@@ -84,7 +87,7 @@ options.HybridFcn = [] ;
 options.InitialPopulation = [] ;
 options.InitialVelocities = [] ;
 options.KnownMin = [] ;
-options.OutputFcns = [] ;
+options.OutputFcns = {} ;
 options.PlotFcns = {} ;
 options.PlotInterval = 1 ;
 options.PopInitRange = [0;1] ;
@@ -100,6 +103,7 @@ options.VelocityLimit = [] ;
 if ~nargin && ~nargout
     fprintf('\n')
     fprintf('Available options for PSOOPTIMSET {defaults}:\n\n')
+    fprintf('    AccelerationFcn: [Function handle | {@psoiterate}]\n') ;
     fprintf('CognitiveAttraction: [Positive scalar | {%g}]\n',...
         options.CognitiveAttraction) ;
     fprintf('     ConstrBoundary: [''soft'' | ''reflect'' | ''absorb'' | {''%s''}]\n',...

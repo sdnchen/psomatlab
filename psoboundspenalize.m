@@ -9,46 +9,47 @@ x = state.Population ;
 state.OutOfBounds = false(size(state.Population,1),1) ;
 state.Penalty = zeros(size(state.Population,1),1) ;
 
+nLB = size(LB,2) ;
+nUB = nLB + size(UB,2) ;
+nineq = nUB + size(Aineq,1) ;
+neq = nineq + size(Aeq,1) ;
+
 if ~isempty(nonlcon)
     [ctest,ceqtest] = nonlcon(zeros(1,options.PopulationSize)) ;
     ctest = ctest(:) ; ceqtest = ceqtest(:) ;
-    nnonl = size([ctest;ceqtest],1) ;
+    nnonl = neq + size([ctest;ceqtest],1) ;
 else
-    nnonl = 0 ;
+    nnonl = neq ;
 end
 
-nLB = size(LB,2) ;
-nUB = size(UB,2) ;
-nineq = size(Aineq,1) ; neq = size(Aeq,1) ;
-
-nconstr = nLB + nUB + nineq + neq + nnonl ;
+nconstr = nnonl ;
 f = abs(mean(state.Score)) ;
 g = zeros(options.PopulationSize,nconstr) ;
 
 for i = 1:options.PopulationSize
     if ~isempty(LB)
-        g(i,1:nLB) = max([LB - x(i,:) - options.TolCon ;
+        g(i,1:nLB) = max([LB - x(i,:) ;
             zeros(1,size(state.Population,2))]) ;
     end
     
     if ~isempty(UB)
-        g(i,nLB+1:nLB+nUB) = max([x(i,:) - UB  - options.TolCon ;
+        g(i,nLB+1:nUB) = max([x(i,:) - UB ;
             zeros(1,size(state.Population,2))]) ;
     end
     
     if ~isempty(Aineq) % Check linear inequalities
-        g(i,nUB+1:nUB+nineq) = max(Aineq*x(i,:)' - bineq - options.TolCon,...
+        g(i,nUB+1:nineq) = max(Aineq*x(i,:)' - bineq,...
             zeros(size(bineq))) ;
     end % if ~isempty
     
     if ~isempty(Aeq) % Check linear equalities
-        g(i,nineq+1:nineq+neq) = max(abs(Aeq*x(i,:)' - beq) - ...
-            options.TolCon,zeros(size(beq))) ;
+        g(i,nineq+1:neq) = max(abs(Aeq*x(i,:)' - beq),...
+            zeros(size(beq))) ;
     end % if ~isempty
     
     if ~isempty(nonlcon) % Nonlinear constraint check
         [c,ceq] = nonlcon(x(i,:)) ; 
-        g(i,neq+1:neq+nnonl) = ...
+        g(i,neq+1:nnonl) = ...
             [max(c(:)' - options.TolCon,zeros(size(c(:)'))) , ...
              max(abs(ceq(:)') > options.TolCon,zeros(size(ceq(:)')))] ;
     end
@@ -67,7 +68,6 @@ ssg = sum(mean(g,1).^2,2) ;
 penalty = zeros(options.PopulationSize,1) ;
 if ssg > options.TolCon ;
     k = zeros(1,size(g,2)) ;
-    penalty = zeros(size(g,1),1) ;
     for i = 1:size(g,1)
         for j = 1:size(g,2)
             k(i,j) = f*mean(g(:,j),1)/ssg ;
