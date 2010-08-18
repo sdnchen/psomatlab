@@ -95,6 +95,7 @@ options.PopulationSize = 40 ;
 options.PopulationType = 'doubleVector' ;
 options.SocialAttraction = 1.25 ;
 options.StallGenLimit = 50 ;
+options.TimeLimit = inf ;
 options.TolCon = 1e-6 ;
 options.TolFun = 1e-6 ;
 options.Vectorized = 'off' ;
@@ -145,6 +146,8 @@ if ~nargin && ~nargout
     fprintf('   SocialAttraction: [Positive scalar | {%g}]\n',...
         options.SocialAttraction) ;
     fprintf('      StallGenLimit: [Positive integer | {%g} ]\n',...
+        options.StallGenLimit) ;
+    fprintf('          TimeLimit: [Positive scalar (seconds) | {%g} ]\n',...
         options.StallGenLimit) ;
     fprintf('             TolFun: [Positive scalar | {%g}]\n',...
         options.TolFun) ;
