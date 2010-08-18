@@ -20,6 +20,11 @@ elseif exitflag == 3
     msg = sprintf('%s maximum constraint violation is less than %g,', ...
         msg, options.TolCon) ;
     msg = sprintf('%s after %g generations.', msg, output.generations) ;
+elseif exitflag == 5
+    msg = sprintf('Time limit of %g seconds has been exceeded',...
+        options.TimeLimit) ;
+    msg = sprintf('%s, after %g generations.',...
+        msg, output.generations) ;
 elseif exitflag == -1
     msg = sprintf('Optimization stopped by user') ;
 else

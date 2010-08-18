@@ -13,7 +13,7 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % In development, new features will be added regularly until this is made
 % redundant by an official MATLAB PSO toolbox.
 % 
-% S. Chen. Version 20100522.
+% S. Chen. Version 20100818.
 % Available from http://www.mathworks.com/matlabcentral/fileexchange/25986
 % Distributed under BSD license.
 % 
@@ -324,8 +324,9 @@ state.ParticleInertia = 0.9 ; % Initial inertia
 state.OutOfBounds = false(options.PopulationSize,1) ;
 % alpha = 0 ;
 
-
 % Iterate swarm
+averagetime = 0 ;
+tic
 for k = 1:options.Generations
     state.Score = inf*ones(n,1) ; % Reset fitness vector
     state.Generation = k ;
@@ -405,6 +406,11 @@ for k = 1:options.Generations
         exitflag = 3 ;
         flag = 'done' ;
     end
+    
+    if toc + averagetime > options.TimeLimit
+        exitflag = 5 ;
+        flag = 'done' ;
+    end
     % ---------------------------------------------------------------------
     
     % Update flags, state and plots before updating positions
@@ -462,6 +468,7 @@ for k = 1:options.Generations
     
     % Update the particle velocities and positions
     state = options.AccelerationFcn(options,state,flag) ;
+    averagetime = toc/k ;
 end % for k
 
 % Assign output variables and generate output

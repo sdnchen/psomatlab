@@ -6,16 +6,16 @@ function f = nonlinearconstrdemo(x)
 % options = rosenbrocksfcn('init')
 
 if strcmp(x,'init')
-    f.Aineq = [1 1] ;
-    f.bineq = [0.25] ;
+    f.Aineq = [] ;
+    f.bineq = [] ;
     f.Aeq = [] ;
     f.beq = [] ;
-    f.LB = [] ; f.UB = [inf, -0.5] ;
+    f.LB = [] ; f.UB = [] ;
     f.nonlcon = 'quadrifolium' ; % Could also use 'heart' or 'unitdisk'
     f.options.PopInitRange = [-2, -2; 2, 2] ;
     f.options.KnownMin = [1,1] ;
     f.options.PopulationSize = 100 ;
-    f.options.ConstrBoundary = 'penalize' ;
+    f.options.ConstrBoundary = 'soft' ;
 else
     x = reshape(x,1,[]) ;
     if size(x,2) >= 2
