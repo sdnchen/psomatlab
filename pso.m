@@ -307,12 +307,30 @@ end
 
 n = options.PopulationSize ;
 
+% if ~isempty(options.PlotFcns)
+%     close(findobj('Tag','Swarm Plots','Type','figure'))
+%     state.hfigure = figure('NumberTitle','off',...
+%         'Name','PSO Progress',...
+%         'Tag','Swarm Plots') ;
+% end % if ~isempty
+
+% Change suggested by "Ben" from MATLAB Central.
 if ~isempty(options.PlotFcns)
-    close(findobj('Tag','Swarm Plots','Type','figure'))
-    state.hfigure = figure('NumberTitle','off',...
-        'Name','PSO Progress',...
-        'Tag','Swarm Plots') ;
+    hFig = findobj('Tag', 'PSO Plots', 'Type', 'figure');
+    if isempty(hFig)
+        state.hfigure = figure(...
+            'NumberTitle', 'off', ...
+            'Name', 'Particle Swarm Optimization', ...
+            'NextPlot', 'replacechildren', ...
+            'Tag', 'PSO Plots' );
+    else
+        state.hfigure = hFig;
+        set(0, 'CurrentFigure', state.hfigure);
+        clf
+    end
+    clear hFig
 end % if ~isempty
+
 
 if options.Verbosity > 0, fprintf('\nSwarming...'), end
 exitflag = 0 ; % Default exitflag, for max iterations reached.
@@ -423,7 +441,7 @@ for k = 1:options.Generations
     
     if ~isempty(options.PlotFcns) && ~mod(k,options.PlotInterval)
         % Exit gracefully if user has closed the figure
-        if isempty(findobj('Tag','Swarm Plots','Type','figure'))
+        if isempty(findobj('Tag','PSO Plots','Type','figure'))
             exitflag = -1 ;
             break
         end % if isempty
