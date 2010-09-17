@@ -75,10 +75,9 @@ function options = psooptimset(varargin)
 
 % Default options
 options.CognitiveAttraction = 0.5 ;
-options.ConstrBoundary = 'penalize' ; 
+options.ConstrBoundary = 'soft' ; 
 options.AccelerationFcn = @psoiterate ;
 options.CognitiveAttraction = 0.5 ;
-options.ConstrBoundary = 'penalize' ; 
 options.DemoMode = 'off' ;
 options.Display = 'final' ;
 options.FitnessLimit = -inf ;

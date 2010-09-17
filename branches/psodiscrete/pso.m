@@ -232,7 +232,7 @@ end
 
 % Check initial population with respect to bound constraints
 % Is this really desirable? Maybe there are some situations where the user
-% specifically does not want an uniform inital population covering all of
+% specifically does not want a uniform inital population covering all of
 % LB and UB?
 if ~isempty(LB) || ~isempty(UB)
     options.LinearConstr.type = 'boundconstraints' ;
