@@ -29,7 +29,9 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % See also:
 % PSO, PSOOPTIMSET, PSODEMO
 
-if ~exist('options','var') % Set default options
+if nargin < 2
+    error('PSOBINARY requires at least two input arguments.')
+elseif ~exist('options','var') % Set default options
     options = struct ;
 end % if ~exist
 options = psooptimset(options,'PopulationType','bitstring') ;
