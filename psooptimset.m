@@ -68,8 +68,11 @@ options.PopulationSize = 40 ;
 options.PopulationType = 'doubleVector' ;
 options.SocialAttraction = 1.5 ;
 options.StallGenLimit = 50 ;
+options.StallTimeLimit = Inf ;
+options.TimeLimit = Inf ;
 options.TolCon = 1e-6 ;
 options.TolFun = 1e-6 ;
+options.UseParallel = 'never' ;
 options.Vectorized = 'off' ;
 options.VelocityLimit = [] ;
 
@@ -130,7 +133,7 @@ if ~nargin && ~nargout
 end
 
 if ~nargin || isequal(varargin{1},@pso)
-    return
+    return % Return default values
 elseif isstruct(varargin{1})
     oldoptions = varargin{1} ;
     fieldsprovided = fieldnames(oldoptions) ;

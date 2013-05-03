@@ -4,7 +4,6 @@ function state = ...
 
 x = state.Population ;
 v = state.Velocities ;
-
 state.OutOfBounds = zeros(size(state.Population,1),1) ;
 
 for i = 1:size(state.Population,1)
@@ -73,8 +72,74 @@ for i = 1:size(state.Population,1)
                 end % if any
             end % if isempty
         end % if ~isempty
+    elseif strcmpi(options.ConstrBoundary,'penalize')
+%         % "Sticky" linear inequality constraints
+%         if ~isempty(Aineq)
+%             if max(Aineq*x(i,:)' - bineq) > options.TolCon
+%                 v(i,:) = 0 ;
+%             end % if Aineq
+%         end % if ~isempty
+
+%         % Finally update all particle positions
+%         if isempty(nonlcon)
+%             x(i,:) = linprog([],Aineq,bineq,Aeq,beq,LB,UB,...
+%                 x(i,:),state.LinprogOptions) ;
+%         else % Check nonlinear constraints
+            [c,ceq] = nonlconwrapper(nonlcon,Aineq,bineq,Aeq,beq,LB,UB,...
+                options.TolCon,x(i,:)) ;
+            
+            % Tolerances already dealt with in nonlconwrapper
+            if sum([c,ceq]) ~= 0
+                state.OutOfBounds(i) = true ;
+                 % Sticky boundaries: kills the inertia of the particle if
+                 % it is in a non feasible region of the design space.
+                v(i,:) = 0 ;
+            end
+            
+            if i == 1;
+                nbrConstraints = size([c ceq],2) ;
+                state.ConstrViolations = ...
+                    zeros(size(x,1),nbrConstraints) ;
+                state.ConstrViolations(i,:) = [c,ceq] ;
+            else
+                state.ConstrViolations(i,:) = [c,ceq] ;
+            end
+            
+%         end
     end % if strcmpi
 end % for i
 
 state.Population = x ;
 state.Velocities = v ;
+
+function [c,ceq] = nonlconwrapper(nonlcon,Aineq,bineq,Aeq,beq,LB,UB,...
+    TolCon,x)
+% Wrapper function for combining evaluation of all constraints
+
+c = [] ; ceq = [] ;
+if ~isempty(nonlcon)
+    [c,ceq] = nonlcon(x) ;
+    c = reshape(c,1,[]) ; ceq = reshape(ceq,1,[]) ; % Robustness
+end
+
+if ~isempty(Aineq)
+    c = [c, (Aineq*x' - bineq)'] ;
+end
+
+if ~isempty(LB)
+    c = [c, LB - x] ;
+end
+
+if ~isempty(UB)
+    c = [c, x - UB] ;
+end
+
+if ~isempty(Aeq)
+    ceq = [ceq, abs(Aeq*x' - beq)'] ;
+end
+
+% Tolerances
+if ~isempty(c)
+    ceq(abs(ceq) < TolCon) = 0 ;
+    c(c < 0) = 0 ;
+end
