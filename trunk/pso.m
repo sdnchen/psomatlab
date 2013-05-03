@@ -13,7 +13,7 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % In development, new features will be added regularly until this is made
 % redundant by an official MATLAB PSO toolbox.
 %
-% S. Chen. Version 20100503.
+% S. Chen. Version 20130502.
 % Available from http://www.mathworks.com/matlabcentral/fileexchange/25986
 % Distributed under BSD license.
 %
@@ -52,16 +52,19 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % vector of length nvars.
 %
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq)
-% Linear equality constraints, such that Aeq*x = beq. Soft boundaries only.
-% If no inequality constraints exist, set Aineq and bineq to [].
+% Linear equality constraints, such that Aeq*x = beq. 'Soft' or 'penalize'
+% boundaries only. If no inequality constraints exist, set Aineq and bineq
+% to [].
 %
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq,LB,UB)
-% Lower and upper bounds definted as LB and UB respectively. Use empty
-% arrays [] for A, b, Aeq, or beq if no linear constraints exist.
+% Lower and upper bounds defined as LB and UB respectively. Both LB and UB,
+% if defined, should be 1 x nvars vectors. Use empty arrays [] for A, b,
+% Aeq, or beq if no linear constraints exist.
 %
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq,LB,UB,nonlcon)
 % Non-linear constraints. Nonlinear inequality constraints in the form c(x)
-% <= 0 have now been implemented using 'soft' boundaries only. See the
+% <= 0 have now been implemented using 'soft' boundaries, or
+% experimentally, using 'penalize' constraint handling method. See the
 % Optimization Toolbox documentation for the proper syntax for defining
 % nonlinear constraints.
 %
@@ -219,7 +222,7 @@ if ~isempty(Aeq) || ~isempty(Aineq) || ~isempty(nonlcon)
     if strcmpi(options.ConstrBoundary,'reflect')
         options.ConstrBoundary = 'soft' ;
         msg = sprintf('Constraint boundary behavior ''reflect''') ;
-        msg = sprintf('%s is not yet supported for linear constraints.',...
+        msg = sprintf('%s is not supported for linear constraints.',...
             msg) ;
         msg = sprintf('%s Switching boundary behavior to ''soft''.',msg) ;
         warning('pso:mainfcn:constraintbounds',...
@@ -254,6 +257,7 @@ state.ParticleInertia = 0.9 ; % Initial inertia
 % alpha = 0 ;
 for k = 1:itr
     state.Score = inf*ones(n,1) ; % Reset fitness vector
+    state.Penalties = zeros(n,1) ; % Reset all penalties
     state.Generation = k ;
     state.OutOfBounds = false(options.PopulationSize,1) ;
     
@@ -268,15 +272,29 @@ for k = 1:itr
     
     % Evaluate fitness, update the local bests
     % ---------------------------------------------------------------------
-    if strcmpi(options.Vectorized,'off')
-        for i = setdiff(1:n,find(state.OutOfBounds))
-            state.Score(i) = fitnessfcn(state.Population(i,:)) ;
-        end % for i
-    else % Vectorized fitness function
-        state.Score(setdiff(1:n,find(state.OutOfBounds))) = ...
-            fitnessfcn(state.Population(setdiff(1:n,...
-            find(state.OutOfBounds)),:)) ;
-    end % if strcmpi
+    % Apply constraint violation penalties, if applicable
+    if strcmpi(options.ConstrBoundary,'penalize') % EXPERIMENTAL
+        if strcmpi(options.Vectorized,'off')
+            for i = 1:n
+                state.Score(i) = fitnessfcn(state.Population(i,:)) ;
+            end % for i
+        else % Vectorized fitness function
+            state.Score = fitnessfcn(state.Population) ;
+        end % if strcmpi
+        state = psocalculatepenalties(state) ;
+    else % DEFAULT (STABLE)
+        % Note that this code does not calculate fitness values for
+        % particles that are outside the search space constraints.
+        if strcmpi(options.Vectorized,'off')
+            for i = setdiff(1:n,find(state.OutOfBounds))
+                state.Score(i) = fitnessfcn(state.Population(i,:)) ;
+            end % for i
+        else % Vectorized fitness function
+            state.Score(setdiff(1:n,find(state.OutOfBounds))) = ...
+                fitnessfcn(state.Population(setdiff(1:n,...
+                find(state.OutOfBounds)),:)) ;
+        end % if strcmpi
+    end
     
     betterindex = state.Score < state.fLocalBests ;
     state.fLocalBests(betterindex) = state.Score(betterindex) ;
@@ -292,7 +310,7 @@ for k = 1:itr
 %         ((1/n)*sum((state.Velocities*state.Velocities')^2) ./ ...
 %         ((1/n)*sum(state.Velocities*state.Velocities')).^2) ;
 %     tempchk = alpha <= 1.6 ;
-    if minfitness < state.fGlobalBest
+    if k == 1 || minfitness < state.fGlobalBest(k-1)
         state.fGlobalBest(k) = minfitness ;
         state.xGlobalBest = state.Population(minfitnessindex,:) ;
         state.LastImprovement = k ;
