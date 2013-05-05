@@ -10,12 +10,12 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % PSO algorithm. Demo function included, with a small library of test
 % functions. Requires Optimization Toolbox.
 %
-% In development, new features will be added regularly until this is made
-% redundant by an official MATLAB PSO toolbox.
+% New features will be added regularly until this is made redundant by an
+% official MATLAB PSO toolbox.
 %
-% S. Chen. Version 20130502.
+% Author: S. Chen. Version 20130502.
 % Available from http://www.mathworks.com/matlabcentral/fileexchange/25986
-% Distributed under BSD license.
+% Distributed under BSD license. First published in 2009.
 %
 % Syntax:
 % psodemo
@@ -44,12 +44,13 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % x = pso(fitnessfcn,nvars)
 % Runs the particle swarm algorithm with no constraints and default
 % options. fitnessfcn is a function handle, nvars is the number of
-% parameters to be optimized, i.e. the dimensionality of the problem.
+% parameters to be optimized, i.e. the dimensionality of the problem. x is
+% a 1xnvars vector representing the coordinates of the global optimum
+% found by the pso algorithm.
 %
 % x = pso(fitnessfcn,nvars,Aineq,bineq)
-% Linear constraints, such that Aineq*x <= bineq. Soft boundaries only.
-% Aineq is a matrix of size nconstraints x nvars, while b is a column
-% vector of length nvars.
+% Linear constraints, such that Aineq*x <= bineq. Aineq is a matrix of size
+% nconstraints x nvars, while b is a column vector of length nvars.
 %
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq)
 % Linear equality constraints, such that Aeq*x = beq. 'Soft' or 'penalize'
@@ -58,15 +59,16 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 %
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq,LB,UB)
 % Lower and upper bounds defined as LB and UB respectively. Both LB and UB,
-% if defined, should be 1 x nvars vectors. Use empty arrays [] for A, b,
-% Aeq, or beq if no linear constraints exist.
+% if defined, should be 1 x nvars vectors. Use empty arrays [] for Aineq,
+% bineq, Aeq, or beq if no linear constraints exist.
 %
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq,LB,UB,nonlcon)
 % Non-linear constraints. Nonlinear inequality constraints in the form c(x)
 % <= 0 have now been implemented using 'soft' boundaries, or
 % experimentally, using 'penalize' constraint handling method. See the
 % Optimization Toolbox documentation for the proper syntax for defining
-% nonlinear constraints.
+% nonlinear constraints. Use empty arrays [] for Aineq, bineq, Aeq, beq,
+% LB, or UB if they are not needed.
 %
 % x = pso(fitnessfcn,nvars,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,options)
 % Default algorithm parameters replaced with those defined in the options
@@ -78,8 +80,8 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 %
 % NOTE: the swarm will perform better if the PopInitRange option is defined
 % so that it closely bounds the expected domain of the feasible region.
-% This is automatically done for lower and upper bound constraints, but not
-% for linear and nonlinear constraints.
+% This is automatically done if the problem has both lower and upper bound
+% constraints, but not for linear and nonlinear constraints.
 %
 % NOTE 2: If options.HybridFcn is to be defined, and if it is necessary to
 % pass a non-default options structure to the hybrid function, then the
@@ -90,25 +92,26 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % >> options.HybridFcn = {@fmincon, hybridoptions} ;
 %
 % x = pso(problem)
-% Parameters imported from problem structure. Should work, but no error
-% checking yet.
+% Parameters imported from problem structure.
 %
-% [x, fval] = pso(...)
+% [x,fval] = pso(...)
 % Returns the fitness value of the best solution.
 %
-% [x, fval,exitflag] = pso(...)
-% Returns information on outcome of pso run. Should match exitflag values
-% for GA where applicable, for code reuseability.
+% [x,fval,exitflag] = pso(...)
+% Returns information on outcome of pso run. This should match exitflag
+% values for GA where applicable, for code reuseability between the two
+% toolboxes.
 %
-% [x, fval,exitflag,output] = pso(...)
+% [x,fval,exitflag,output] = pso(...)
 % The structure output contains more detailed information about the PSO
-% run. Should match output fields of GA, where applicable.
+% run. It should match output fields of GA, where applicable.
 %
-% [x, fval,exitflag,output,population] = pso(...)
+% [x,fval,exitflag,output,population] = pso(...)
 % A matrix population of size PopulationSize x nvars, with the locations of
-% particles across the rows.
+% particles across the rows. This may be used to save the final positions
+% of all the particles in a swarm.
 %
-% [x, fval,exitflag,output,population,scores] = pso(...)
+% [x,fval,exitflag,output,population,scores] = pso(...)
 % Final scores of the particles in population.
 %
 % See also:
@@ -194,6 +197,7 @@ end
 % -------------------------------------------------------------------------
 
 % Check validity of VelocityLimit
+% -------------------------------------------------------------------------
 if all(~isfinite(options.VelocityLimit))
     options.VelocityLimit = [] ;
 elseif isscalar(options.VelocityLimit)
@@ -204,13 +208,16 @@ elseif ~isempty(length(options.VelocityLimit)) && ...
     error('%s, or a vector of size 1xnvars.',msg)
 end % if isscalar
 options.VelocityLimit = abs(options.VelocityLimit) ;
+% -------------------------------------------------------------------------
 
 % Generate swarm initial state (this line must not be moved)
+% -------------------------------------------------------------------------
 if strncmpi(options.PopulationType,'double',2)
     state = psocreationuniform(options,nvars) ;
 elseif strncmpi(options.PopulationType,'bi',2)
     state = psocreationbinary(options,nvars) ;
 end
+% -------------------------------------------------------------------------
 
 % Check initial population with respect to linear and nonlinear constraints
 % -------------------------------------------------------------------------
@@ -220,11 +227,11 @@ if ~isempty(Aeq) || ~isempty(Aineq) || ~isempty(nonlcon)
         options.LinearConstr.type = 'nonlinearconstraints' ;
     end
     if strcmpi(options.ConstrBoundary,'reflect')
-        options.ConstrBoundary = 'soft' ;
+        options.ConstrBoundary = 'penalize' ;
         msg = sprintf('Constraint boundary behavior ''reflect''') ;
         msg = sprintf('%s is not supported for linear constraints.',...
             msg) ;
-        msg = sprintf('%s Switching boundary behavior to ''soft''.',msg) ;
+        msg = sprintf('%s Switching to ''penalize'' method.',msg) ;
         warning('pso:mainfcn:constraintbounds',...
             '%s',msg)
     end
@@ -239,18 +246,39 @@ end
 n = options.PopulationSize ;
 itr = options.Generations ;
 
+% if ~isempty(options.PlotFcns)
+%     close(findobj('Tag','Swarm Plots','Type','figure'))
+%     state.hfigure = figure('NumberTitle','off',...
+%         'Name','PSO Progress',...
+%         'Tag','Swarm Plots') ;
+% end % if ~isempty
+
+% Initialize Figure for displaying plots
+% Change suggested by "Ben" from MATLAB Central.
+% -------------------------------------------------------------------------
 if ~isempty(options.PlotFcns)
-    close(findobj('Tag','Swarm Plots','Type','figure'))
-    state.hfigure = figure('NumberTitle','off',...
-        'Name','PSO Progress',...
-        'Tag','Swarm Plots') ;
+    hFig = findobj('Tag', 'PSO Plots', 'Type', 'figure');
+    if isempty(hFig)
+        state.hfigure = figure(...
+            'NumberTitle', 'off', ...
+            'Name', 'Particle Swarm Optimization', ...
+            'NextPlot', 'replacechildren', ...
+            'Tag', 'PSO Plots' );
+    else
+        state.hfigure = hFig;
+        set(0, 'CurrentFigure', state.hfigure);
+        clf
+    end
+    clear hFig
 end % if ~isempty
+% -------------------------------------------------------------------------
 
 if options.Verbosity > 0, fprintf('\nSwarming...'), end
 exitflag = 0 ; % Default exitflag, for max iterations reached.
 flag = 'init' ;
 
 % Iterate swarm
+% -------------------------------------------------------------------------
 state.fitnessfcn = fitnessfcn ;
 state.LastImprovement = 1 ;
 state.ParticleInertia = 0.9 ; % Initial inertia
@@ -298,8 +326,7 @@ for k = 1:itr
     
     betterindex = state.Score < state.fLocalBests ;
     state.fLocalBests(betterindex) = state.Score(betterindex) ;
-    state.xLocalBests(betterindex,:) = ...
-        state.Population(betterindex,:) ;
+    state.xLocalBests(betterindex,:) = state.Population(betterindex,:) ;
     % ---------------------------------------------------------------------
     
     % Update the global best and its fitness, then check for termination
@@ -386,6 +413,7 @@ for k = 1:itr
     % Update the particle velocities and positions
     state = psoiterate(state,options) ;
 end % for k
+% -------------------------------------------------------------------------
 
 % Assign output variables and generate output
 % -------------------------------------------------------------------------

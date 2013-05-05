@@ -40,11 +40,19 @@ function options = psooptimset(varargin)
 %
 % Again, type psooptimset with no input arguments to display a list of
 % options which may be set.
+%
 % NOTE regarding the ConstrBoundary option:
 % A 'soft' boundary allows particles to leave problem bounds, but sets
-% their fitness scores to Inf if they do. Other acceptable options are
-% 'reflect' and 'absorb', which prevents them from travelling outside the
-% problem bounds at all.
+% their fitness scores to Inf if they do, thus preventing the infeasible
+% solutions from ever becoming a global or self-best point.
+%
+% The 'reflect' option works only with bounded constraints. It prevents
+% the from particle travelling outside the problem bounds at all.
+%
+% The 'absorb' option will automatically reset particle velocities to 0 if
+% they leave the feasible design space.
+%
+% The 'penalize' option is a combination of the 'soft' and 'absorb' methods.
 %
 % See also:
 % pso, psodemo
@@ -80,7 +88,7 @@ if ~nargin && ~nargout
     fprintf('\n')
     fprintf('CognitiveAttraction: [Positive scalar | {%g}]\n',...
         options.CognitiveAttraction) ;
-    fprintf('     ConstrBoundary: [soft | reflect | absorb | {''%s''}]\n',...
+    fprintf('     ConstrBoundary: [soft | penalize | reflect | absorb | {''%s''}]\n',...
         options.ConstrBoundary) ;
     fprintf('            Display: [''off'' | ''final'' | {''%s''}]\n',...
         options.Display) ;

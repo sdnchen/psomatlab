@@ -4,13 +4,15 @@ function state = ...
 
 x = state.Population ;
 v = state.Velocities ;
-state.OutOfBounds = zeros(size(state.Population,1),1) ;
+n = size(state.Population,1) ;
+state.OutOfBounds = false(n,1) ;
+state.InBounds = false(n,1) ;
 
-for i = 1:size(state.Population,1)
+for i = 1:n
     lowindex = [] ; highindex = [] ;
     if ~isempty(LB), lowindex = x(i,:) < LB ; end
     if ~isempty(UB), highindex = x(i,:) > UB ; end
-    % Three constraint types
+    % Four constraint types
     if strcmpi(options.ConstrBoundary,'soft')
         outofbounds = any([lowindex,highindex]) ;
         if ~outofbounds && ~isempty(Aineq)
@@ -73,42 +75,29 @@ for i = 1:size(state.Population,1)
             end % if isempty
         end % if ~isempty
     elseif strcmpi(options.ConstrBoundary,'penalize')
-%         % "Sticky" linear inequality constraints
-%         if ~isempty(Aineq)
-%             if max(Aineq*x(i,:)' - bineq) > options.TolCon
-%                 v(i,:) = 0 ;
-%             end % if Aineq
-%         end % if ~isempty
+        [c,ceq] = nonlconwrapper(nonlcon,Aineq,bineq,Aeq,beq,LB,UB,...
+            options.TolCon,x(i,:)) ;
 
-%         % Finally update all particle positions
-%         if isempty(nonlcon)
-%             x(i,:) = linprog([],Aineq,bineq,Aeq,beq,LB,UB,...
-%                 x(i,:),state.LinprogOptions) ;
-%         else % Check nonlinear constraints
-            [c,ceq] = nonlconwrapper(nonlcon,Aineq,bineq,Aeq,beq,LB,UB,...
-                options.TolCon,x(i,:)) ;
-            
-            % Tolerances already dealt with in nonlconwrapper
-            if sum([c,ceq]) ~= 0
-                state.OutOfBounds(i) = true ;
-                 % Sticky boundaries: kills the inertia of the particle if
-                 % it is in a non feasible region of the design space.
-                v(i,:) = 0 ;
-            end
-            
-            if i == 1;
-                nbrConstraints = size([c ceq],2) ;
-                state.ConstrViolations = ...
-                    zeros(size(x,1),nbrConstraints) ;
-                state.ConstrViolations(i,:) = [c,ceq] ;
-            else
-                state.ConstrViolations(i,:) = [c,ceq] ;
-            end
-            
-%         end
+        % Tolerances already dealt with in nonlconwrapper
+        if sum([c,ceq]) ~= 0
+            state.OutOfBounds(i) = true ;
+             % Sticky boundaries: kills the inertia of the particle if
+             % it is in a non-feasible region of the design space.
+            v(i,:) = 0 ;
+        end
+
+        if i == 1;
+            nbrConstraints = size([c ceq],2) ;
+            state.ConstrViolations = ...
+                zeros(size(x,1),nbrConstraints) ;
+            state.ConstrViolations(i,:) = [c,ceq] ;
+        else
+            state.ConstrViolations(i,:) = [c,ceq] ;
+        end
     end % if strcmpi
 end % for i
 
+state.InBounds(setdiff((1:n)',find(state.OutOfBounds))) = true ;
 state.Population = x ;
 state.Velocities = v ;
 
