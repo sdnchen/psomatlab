@@ -5,10 +5,11 @@ if strcmpi(x,'init')
     f.options.Vectorized = 'on' ;
     f.options.HybridFcn = {} ;
     f.options.Generations = 500 ;
-    f.options.ConstrBoundary = 'absorb' ;
+    f.options.ConstrBoundary = 'penalize' ;
     f.LB = [0,0] ; f.UB = [] ;
     f.Aeq = [] ; f.beq = [] ;
-    f.Aineq = [] ; f.bineq = [] ;
+    f.Aineq = [-1 0] ; f.bineq = [-2] ;
+%     f.Aineq = [] ; f.bineq = [] ;
     f.nonlcon = [] ;
 else
     a = 1 ; b = 0.01 ;
