@@ -1,7 +1,7 @@
 Development Notes for psopt toolbox
 
 To do (in no particular order):
-* Implement parallel computing capabilities (Michael Johnston).
+* Implement parallel computing capabilities (suggestions from Michael Johnston, J. Oliver).
 * An output function defined by options.OutputFcns that can save current swarm state in a file which can be reloaded later as a problem structure, in case of a system crash.
 * Ability to define neighborhoods of particles to determine non-local best positions (social parameter).
   - Social stereotyping using clustering algorithm (Kennedy 2000)
@@ -13,11 +13,13 @@ To do (in no particular order):
 * Detect and eliminate dependent (i.e. redundant) linear constraints.
 * Implement multiobjective optimization option; find Pareto front.
 
-ver CURRENT:
+ver 20130515:
 * Merged back changes from version 20100818 which did not make it into ver 20130502
-* Plotting axes should no longer cause errors if options.PlotInterval > 1 (suggestion made by Ziqiang (Kevin) Chen, 13 Nov 2012)
-* Slight modification to penalty calculation method to prevent infeasible points from being selected over feasible points to become the global best.
+* Fixed error with constraint enforcement method set to 'penalize' with an unconstrained problem.
+* Slight modification to penalty calculation method to prevent infeasible points from being selected over feasible points when selecting the global best.
+* Default constraint enforcement method is now 'penalize'. Since this is a relatively new feature, please double-check the feasibility of solutions to your constrained problems before accepting results for mission-critical applications.
 * Documentation updated in PSOOPTIMSET help file.
+* Plotting axes should no longer cause errors if options.PlotInterval > 1 (suggestion made by Ziqiang (Kevin) Chen, 13 Nov 2012)
 
 ver 20130502:
 * Added a new constraint handling method: 'penalize', described in Perez 2007. Both nonlinear inequality and equality constraints can now be handled gracefully by this toolbox. It also works well for handling linear and bounded constraints. If there are no problems reported after a certain amount of time "in the wild", this will become the default constraint handling method.

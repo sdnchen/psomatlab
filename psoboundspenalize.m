@@ -13,6 +13,11 @@ for i = 1:n
     [c,ceq] = nonlconwrapper(nonlcon,Aineq,bineq,Aeq,beq,LB,UB,...
         options.TolCon,x(i,:)) ;
 
+    if isempty([c,ceq])
+        state.ConstrViolations = zeros(n,1) ;
+        break
+    end
+    
     % Tolerances already dealt with in nonlconwrapper
     if sum([c,ceq]) ~= 0
         state.OutOfBounds(i) = true ;
@@ -21,14 +26,11 @@ for i = 1:n
         v(i,:) = 0 ;
     end
 
-    if i == 1;
+    if i == 1
         nbrConstraints = size([c ceq],2) ;
-        state.ConstrViolations = ...
-            zeros(size(x,1),nbrConstraints) ;
-        state.ConstrViolations(i,:) = [c,ceq] ;
-    else
-        state.ConstrViolations(i,:) = [c,ceq] ;
+        state.ConstrViolations = zeros(size(x,1),nbrConstraints) ;
     end
+    state.ConstrViolations(i,:) = [c,ceq] ;
 end % for i
 
 state.InBounds(setdiff((1:n)',find(state.OutOfBounds))) = true ;
