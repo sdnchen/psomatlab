@@ -43,23 +43,40 @@ function options = psooptimset(varargin)
 %
 % NOTE regarding the ConstrBoundary option:
 % A 'soft' boundary allows particles to leave problem bounds, but sets
-% their fitness scores to Inf if they do, thus preventing the infeasible
-% solutions from ever becoming a global or self-best point.
+% their fitness scores to Inf if they do. This can save time, since
+% infeasible points are not evaluated. Other acceptable options are
+% 'penalize', 'reflect', and 'absorb',
+% The 'penalize' option as described in Perez 2007 is the default since it
+% seems to provide the best combination of performance and versatility.
+% The 'reflect' and 'absorb' options prevent the particles from travelling
+% outside the problem bounds at all. However, 'reflect' has only been
+% implemented for bounded constraints, and 'absorb' may suffer from poor
+% performance if linear or nonlinear equality constraints are used.
 %
-% The 'reflect' option works only with bounded constraints. It prevents
-% the from particle travelling outside the problem bounds at all.
+% NOTE regarding cognitive and social attraction parameters:
+% Perez and Behdinan (2007) demonstrated that the particle swarm is only
+% stable if the following conditions are satisfied:
+% Given that C0 = particle inertia
+%            C1 = options.SocialAttraction
+%            C2 = options.CognitiveAttraction
+%    1) 0 < (C1 + C2) < 4
+%    2) (C1 + C2)/2 - 1 < C0 < 1
+% If conditions 1 and 2 are satisfied, the system will be guaranteed to
+% converge to a stable equilibrium point. However, whether or not this
+% point is actually the global minimum cannot be guaranteed, and its
+% acceptability as a solution should be verified by the user.
 %
-% The 'absorb' option will automatically reset particle velocities to 0 if
-% they leave the feasible design space.
-%
-% The 'penalize' option is a combination of the 'soft' and 'absorb' methods.
+% Bibliography
+% RE Perez and K Behdinan. "Particle swarm approach for structural
+% design optimization." Computers and Structures, Vol. 85:1579-88, 2007.
 %
 % See also:
 % pso, psodemo
 
 % Default options
 options.CognitiveAttraction = 0.5 ;
-options.ConstrBoundary = 'soft' ; 
+options.ConstrBoundary = 'penalize' ; 
+options.AccelerationFcn = @psoiterate ;
 options.DemoMode = 'off' ;
 options.Display = 'final' ;
 options.FitnessLimit = -inf ;
@@ -68,13 +85,13 @@ options.HybridFcn = [] ;
 options.InitialPopulation = [] ;
 options.InitialVelocities = [] ;
 options.KnownMin = [] ;
-options.OutputFcns = [] ;
+options.OutputFcns = {} ;
 options.PlotFcns = {} ;
 options.PlotInterval = 1 ;
 options.PopInitRange = [0;1] ;
 options.PopulationSize = 40 ;
 options.PopulationType = 'doubleVector' ;
-options.SocialAttraction = 1.5 ;
+options.SocialAttraction = 1.25 ;
 options.StallGenLimit = 50 ;
 options.StallTimeLimit = Inf ;
 options.TimeLimit = Inf ;
@@ -86,9 +103,11 @@ options.VelocityLimit = [] ;
 
 if ~nargin && ~nargout
     fprintf('\n')
+    fprintf('Available options for PSOOPTIMSET {defaults}:\n\n')
+    fprintf('    AccelerationFcn: [Function handle | {@psoiterate}]\n') ;
     fprintf('CognitiveAttraction: [Positive scalar | {%g}]\n',...
         options.CognitiveAttraction) ;
-    fprintf('     ConstrBoundary: [soft | penalize | reflect | absorb | {''%s''}]\n',...
+    fprintf('     ConstrBoundary: [''soft'' | ''penalize'' | ''reflect'' | ''absorb'' | {''%s''}]\n',...
         options.ConstrBoundary) ;
     fprintf('            Display: [''off'' | ''final'' | {''%s''}]\n',...
         options.Display) ;
@@ -128,6 +147,10 @@ if ~nargin && ~nargout
         options.SocialAttraction) ;
     fprintf('      StallGenLimit: [Positive integer | {%g} ]\n',...
         options.StallGenLimit) ;
+    fprintf('      StallTimeLimit: [Positive scalar (seconds) | {%g} ]\n',...
+        options.StallTimeLimit) ;
+    fprintf('          TimeLimit: [Positive scalar (seconds) | {%g} ]\n',...
+        options.StallGenLimit) ;
     fprintf('             TolFun: [Positive scalar | {%g}]\n',...
         options.TolFun) ;
     fprintf('             TolCon: [Positive scalar | {%g}]\n',...
@@ -145,6 +168,10 @@ if ~nargin || isequal(varargin{1},@pso)
 elseif isstruct(varargin{1})
     oldoptions = varargin{1} ;
     fieldsprovided = fieldnames(oldoptions) ;
+    if nargin == 2 && isstruct(varargin{2})
+        newoptions = varargin{2} ;
+        newfields = fieldnames(newoptions) ;
+    end
 end
 
 requiredfields = fieldnames(options) ;
@@ -164,6 +191,15 @@ for i = 1:size(requiredfields,1)
         if ~isempty(fieldidx)
             options.(requiredfields{i,1}) = ...
                 oldoptions.(fieldsprovided{fieldidx}) ;
+        end
+        if exist('newfields','var')
+            newfieldidx = find(cellfun(@(newfields)strcmp(newfields,...
+                requiredfields{i,1}),...
+                newfields)) ;
+            if ~isempty(newfieldidx)
+                options.(requiredfields{i,1}) = ...
+                    newoptions.(newfields{newfieldidx}) ;
+            end
         end
     end % if ~isempty
 end % for i

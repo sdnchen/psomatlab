@@ -91,6 +91,19 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % >> hybridoptions = optimset(@fmincon) ;
 % >> options.HybridFcn = {@fmincon, hybridoptions} ;
 %
+% NOTE 3:
+% Perez and Behdinan (2007) demonstrated that the particle swarm is only
+% stable if the following conditions are satisfied:
+% Given that C0 = particle inertia
+%            C1 = options.SocialAttraction
+%            C2 = options.CognitiveAttraction
+%    1) 0 < (C1 + C2) < 4
+%    2) (C1 + C2)/2 - 1 < C0 < 1
+% If conditions 1 and 2 are satisfied, the system will be guaranteed to
+% converge to a stable equilibrium point. However, whether or not this
+% point is actually the global minimum cannot be guaranteed, and its
+% acceptability as a solution should be verified by the user.
+%
 % x = pso(problem)
 % Parameters imported from problem structure.
 %
@@ -114,8 +127,17 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % [x,fval,exitflag,output,population,scores] = pso(...)
 % Final scores of the particles in population.
 %
+% Bibliography
+% J Kennedy, RC Eberhart, YH Shi. Swarm Intelligence. Academic Press, 2001.
+%
+% SM Mikki, AA Kishk. Particle Swarm Optimization: A Physics-Based
+% Approach. Morgan & Claypool, 2008.
+%
+% RE Perez and K Behdinan. "Particle swarm approach for structural
+% design optimization." Computers and Structures, Vol. 85:1579-88, 2007.
+%
 % See also:
-% PSODEMO, PSOOPTIMSET.
+% PSODEMO, PSOOPTIMSET, PSOBINARY.
 
 if ~nargin % Rosenbrock's banana function by default, as a demonstration
     fitnessfcn = @(x)100*(x(2)-x(1)^2)^2+(1-x(1))^2 ;
@@ -127,6 +149,7 @@ if ~nargin % Rosenbrock's banana function by default, as a demonstration
     options.Generations = 200 ;
     options.DemoMode = 'on' ;
     options.KnownMin = [1 1] ;
+    options.OutputFcns = {} ;
 elseif isstruct(fitnessfcn)
     nvars = fitnessfcn.nvars ;
     Aineq = fitnessfcn.Aineq ;
@@ -153,6 +176,15 @@ end % if ~exist
 
 options = psooptimset(options) ;
 
+options.Verbosity = 1 ; % For options.Display == 'final' (default)
+if strcmpi(options.Display,'off')
+    options.Verbosity = 0 ;
+elseif strncmpi(options.Display,'iter',4)
+    options.Verbosity = 2 ;
+elseif strncmpi(options.Display,'diag',4)
+    options.Verbosity = 3 ;
+end
+
 if ~exist('Aineq','var'), Aineq = [] ; end
 if ~exist('bineq','var'), bineq = [] ; end
 if ~exist('Aeq','var'), Aeq = [] ; end
@@ -160,23 +192,42 @@ if ~exist('beq','var'), beq = [] ; end
 if ~exist('LB','var'), LB = [] ; end
 if ~exist('UB','var'), UB = [] ; end
 if ~exist('nonlcon','var'), nonlcon = [] ; end
+
+% Check for swarm stability
+% -------------------------------------------------------------------------
+if options.SocialAttraction + options.CognitiveAttraction >= 4
+    msg = 'Warning: Swarm is unstable and may not converge ' ;
+    msg = [msg 'since the sum of the cognitive and social attraction'] ;
+    msg = [msg ' parameters is greater than or equal to 4.'] ;
+    msg = [msg ' Suggest adjusting options.CognitiveAttraction and/or'] ;
+    sprintf('%s options.SocialAttraction.',msg)
+end
+% -------------------------------------------------------------------------
+
+% Check for constraints and bit string population type
+% -------------------------------------------------------------------------
+if strncmpi(options.PopulationType,'bitstring',2) && ...
+        (~isempty([Aineq,bineq]) || ~isempty([Aeq,beq]) || ...
+        ~isempty(nonlcon) || ~isempty([LB,UB]))
+    Aineq = [] ; bineq = [] ; Aeq = [] ; beq = [] ; nonlcon = [] ;
+    LB = [] ; UB = [] ;
+    msg = sprintf('Warning: Constraints will be ignored') ;
+    msg = sprintf('%s for options.PopulationType ''bitstring''',msg) ;
+    disp(msg)
+end
+% -------------------------------------------------------------------------
+
 % Change this when nonlcon gets fully implemented:
+% -------------------------------------------------------------------------
 if ~isempty(nonlcon) && strcmpi(options.ConstrBoundary,'reflect')
     msg = 'Non-linear constraints don''t have ''reflect'' boundaries' ;
+    msg = [msg, ' implemented.'] ;
     warning('pso:main:nonlcon',...
-        '%s implemented. Changing options.ConstrBoundary to ''soft''.',...
+        '%s Changing options.ConstrBoundary to ''penalize''.',...
         msg)
-    options.ConstrBoundary = 'soft' ;
+    options.ConstrBoundary = 'penalize' ;
 end
-
-options.Verbosity = 1 ; % For options.Display == 'final' (default)
-if strncmpi(options.Display,'off',3)
-    options.Verbosity = 0 ;
-elseif strncmpi(options.Display,'iter',4)
-    options.Verbosity = 2 ;
-elseif strncmpi(options.Display,'diag',4)
-    options.Verbosity = 3 ;
-end
+% -------------------------------------------------------------------------
 
 % Is options.PopInitRange reconcilable with LB and UB constraints?
 % -------------------------------------------------------------------------
@@ -187,10 +238,12 @@ end
 
 % Check initial population with respect to bound constraints
 % Is this really desirable? Maybe there are some situations where the user
-% specifically does not want an uniform inital population covering all of
+% specifically does not want a uniform inital population covering all of
 % LB and UB?
 if ~isempty(LB) || ~isempty(UB)
     options.LinearConstr.type = 'boundconstraints' ;
+    if isempty(LB), LB = -inf*ones(1,nvars) ; end
+    if isempty(UB), UB =  inf*ones(1,nvars) ; end
     options.PopInitRange = ...
         psocheckpopulationinitrange(options.PopInitRange,LB,UB) ;
 end
@@ -243,8 +296,24 @@ if ~isempty(Aeq) || ~isempty(Aineq) || ~isempty(nonlcon)
 end
 % -------------------------------------------------------------------------
 
-n = options.PopulationSize ;
-itr = options.Generations ;
+% Check constraint type
+% -------------------------------------------------------------------------
+if isa(options.ConstrBoundary,'function_handle')
+    boundcheckfcn = options.ConstrBoundary ;
+elseif strcmpi(options.ConstrBoundary,'soft')
+    boundcheckfcn = @psoboundssoft ;
+elseif strcmpi(options.ConstrBoundary,'penalize')
+    boundcheckfcn = @psoboundspenalize ;
+    state.Penalty = zeros(options.PopulationSize,1) ;
+    state.PreviouslyFeasible = true(options.PopulationSize,1) ;
+elseif strcmpi(options.ConstrBoundary,'reflect')
+    boundcheckfcn = @psoboundsreflect ;
+elseif strcmpi(options.ConstrBoundary,'absorb')
+    boundcheckfcn = @psoboundsabsorb ;
+end
+% -------------------------------------------------------------------------
+
+n = options.PopulationSize ; itr = options.Generations ;
 
 % if ~isempty(options.PlotFcns)
 %     close(findobj('Tag','Swarm Plots','Type','figure'))
@@ -277,12 +346,15 @@ if options.Verbosity > 0, fprintf('\nSwarming...'), end
 exitflag = 0 ; % Default exitflag, for max iterations reached.
 flag = 'init' ;
 
-% Iterate swarm
-% -------------------------------------------------------------------------
 state.fitnessfcn = fitnessfcn ;
 state.LastImprovement = 1 ;
 state.ParticleInertia = 0.9 ; % Initial inertia
 % alpha = 0 ;
+
+% Iterate swarm
+% -------------------------------------------------------------------------
+averagetime = 0 ;
+tic
 for k = 1:itr
     state.Score = inf*ones(n,1) ; % Reset fitness vector
     state.Penalties = zeros(n,1) ; % Reset all penalties
@@ -293,8 +365,9 @@ for k = 1:itr
     % ---------------------------------------------------------------------
     if ~all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
             isempty([LB;UB]), isempty(nonlcon)])
-        state = psocheckbounds(options,state,Aineq,bineq,Aeq,beq,...
-            LB,UB,nonlcon) ;
+        
+        state = boundcheckfcn(state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,...
+            options) ;
     end % if ~isempty
     % ---------------------------------------------------------------------
     
@@ -323,7 +396,20 @@ for k = 1:itr
                 find(state.OutOfBounds)),:)) ;
         end % if strcmpi
     end
+    % ---------------------------------------------------------------------
+
+    % Extra white space to facilitate comparison with accidentally branched
+    % code.
     
+    
+    
+    
+    
+    
+    
+    
+    % Update the local bests
+    % ---------------------------------------------------------------------
     betterindex = state.Score < state.fLocalBests ;
     state.fLocalBests(betterindex) = state.Score(betterindex) ;
     state.xLocalBests(betterindex,:) = state.Population(betterindex,:) ;
@@ -362,20 +448,24 @@ for k = 1:itr
         exitflag = 3 ;
         flag = 'done' ;
     end
+     
+    if toc + averagetime > options.TimeLimit
+        exitflag = 5 ;
+        flag = 'done' ;
+    end
     % ---------------------------------------------------------------------
     
     % Update flags, state and plots before updating positions
     % ---------------------------------------------------------------------
-    if k == 2
-        flag = 'iter' ;
-    elseif k == itr
+    if k == 2, flag = 'iter' ; end
+    if k == itr
         flag = 'done' ;
         exitflag = 0 ;
     end
     
     if ~isempty(options.PlotFcns) && ~mod(k,options.PlotInterval)
         % Exit gracefully if user has closed the figure
-        if isempty(findobj('Tag','Swarm Plots','Type','figure'))
+        if isempty(findobj('Tag','PSO Plots','Type','figure'))
             exitflag = -1 ;
             break
         end % if isempty
@@ -383,26 +473,34 @@ for k = 1:itr
         rows = floor(sqrt(length(options.PlotFcns))) ;
         cols = ceil(length(options.PlotFcns) / rows) ;
         % Cycle through plotting functions
-        if strcmpi(flag,'init')
+        if strcmpi(flag,'init') || (state.Generation==options.PlotInterval)
             haxes = zeros(length(options.PlotFcns),1) ;
         end % if strcmpi
         for i = 1:length(options.PlotFcns)
-            if strcmpi(flag,'init')
-                haxes(i) = subplot(rows,cols,i,...
-                    'Parent',state.hfigure) ;
+            if strcmpi(flag,'init') || ...
+                    ( state.Generation==options.PlotInterval )
+                haxes(i) = subplot(rows,cols,i,'Parent',state.hfigure) ;
                 set(gca,'NextPlot','replacechildren')
             else
                 subplot(haxes(i))
             end % if strcmpi
-            state = options.PlotFcns{i}(options,state,flag) ;
+            if iscell(options.PlotFcns)
+                state = options.PlotFcns{i}(options,state,flag) ;
+            else
+                state = options.PlotFcns(options,state,flag) ;
+            end
         end % for i
         drawnow
     end % if ~isempty
     
     if ~isempty(options.OutputFcns) && ~mod(k,options.PlotInterval)
-        for i = 1:length(options.Output)
-            state = options.OutputFcns{i}(options,state,flag) ;
-        end % for i
+        if iscell(options.OutputFcns)
+            for i = 1:length(options.OutputFcns)
+                state = options.OutputFcns{i}(options,state,flag) ;
+            end % for i
+        else
+            state = options.OutputFcns(options,state,flag) ;
+        end
     end % if ~isempty
     
     if strcmpi(flag,'done')
@@ -411,7 +509,8 @@ for k = 1:itr
     % ---------------------------------------------------------------------
     
     % Update the particle velocities and positions
-    state = psoiterate(state,options) ;
+    state = options.AccelerationFcn(options,state,flag) ;
+    averagetime = toc/k ;
 end % for k
 % -------------------------------------------------------------------------
 
