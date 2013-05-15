@@ -8,7 +8,7 @@ if strcmpi(x,'init')
     f.options.ConstrBoundary = 'penalize' ;
     f.LB = [0,0] ; f.UB = [] ;
     f.Aeq = [] ; f.beq = [] ;
-    f.Aineq = [-1 0] ; f.bineq = [-2] ;
+    f.Aineq = [-1 0] ; f.bineq = [-0.01] ;
 %     f.Aineq = [] ; f.bineq = [] ;
     f.nonlcon = [] ;
 else

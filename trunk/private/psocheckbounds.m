@@ -1,6 +1,9 @@
 function state = ...
     psocheckbounds(options,state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon)
-% Check the the swarm population against boundary and linear constraints.
+% Check the the swarm population against all constraints.
+%
+% May 15, 2013
+% Deprecated, replaced by PSOBOUNDSPENALIZE in the ./psopt folder.
 
 x = state.Population ;
 v = state.Velocities ;
