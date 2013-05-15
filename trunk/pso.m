@@ -13,7 +13,7 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % New features will be added regularly until this is made redundant by an
 % official MATLAB PSO toolbox.
 %
-% Author: S. Chen. Version 20130502.
+% Author: S. Chen. Version 20130515.
 % Available from http://www.mathworks.com/matlabcentral/fileexchange/25986
 % Distributed under BSD license. First published in 2009.
 %
@@ -382,7 +382,10 @@ for k = 1:itr
         else % Vectorized fitness function
             state.Score = fitnessfcn(state.Population) ;
         end % if strcmpi
-        state = psocalculatepenalties(state) ;
+        if ~all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
+                isempty([LB;UB]), isempty(nonlcon)])
+            state = psocalculatepenalties(state) ;
+        end
     else % DEFAULT (STABLE)
         % Note that this code does not calculate fitness values for
         % particles that are outside the search space constraints.
