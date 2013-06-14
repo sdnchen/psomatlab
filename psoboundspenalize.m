@@ -7,7 +7,7 @@ x = state.Population ;
 v = state.Velocities ;
 n = size(state.Population,1) ;
 state.OutOfBounds = false(n,1) ;
-state.InBounds = false(n,1) ;
+% state.InBounds = false(n,1) ;
 
 for i = 1:n
     [c,ceq] = nonlconwrapper(nonlcon,Aineq,bineq,Aeq,beq,LB,UB,...
@@ -33,7 +33,7 @@ for i = 1:n
     state.ConstrViolations(i,:) = [c,ceq] ;
 end % for i
 
-state.InBounds(setdiff((1:n)',find(state.OutOfBounds))) = true ;
+% state.InBounds(setdiff((1:n)',find(state.OutOfBounds))) = true ;
 state.Population = x ;
 state.Velocities = v ;
 

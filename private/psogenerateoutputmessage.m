@@ -21,7 +21,16 @@ elseif exitflag == 3
         msg, options.TolCon) ;
     msg = sprintf('%s after %g generations.', msg, output.generations) ;
 elseif exitflag == -1
-    msg = sprintf('Optimization stopped by user') ;
+    msg = sprintf('Optimization stopped by user.') ;
+elseif exitflag == -4
+    msg = sprintf('The value of the fitness function did not improve in') ;
+    msg = sprintf('%s the last %g seconds and', ...
+        msg, options.StallTimeLimit) ;
+    msg = sprintf('%s maximum constraint violation is less than %g,', ...
+        msg, options.TolCon) ;
+    msg = sprintf('%s after %g generations.', msg, output.generations) ;
+elseif exitflag == -5
+    msg = sprintf('Time limit of %s reached.',options.TimeLimit) ;
 else
     msg = sprintf('Unrecognized exitflag value') ;
 end % if exitflag
