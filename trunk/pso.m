@@ -232,8 +232,16 @@ end
 % Is options.PopInitRange reconcilable with LB and UB constraints?
 % -------------------------------------------------------------------------
 % Resize PopInitRange in case it was given as one range for all dimensions
-if size(options.PopInitRange,2) == 1 && nvars > 1
+if size(options.PopInitRange,1) ~= 2 && size(options.PopInitRange,2) == 2
+    % Transpose PopInitRange if user provides nvars x 2 matrix instead
+    options.PopInitRange = options.PopInitRange' ;
+elseif size(options.PopInitRange,2) == 1 && nvars > 1
+    % Resize PopInitRange in case it was given as one range for all dim
     options.PopInitRange = repmat(options.PopInitRange,1,nvars) ;
+elseif size(options.PopInitRange,2) ~= nvars
+    msg = 'Number of dimensions of options.PopInitRange does not' ;
+    msg = sprintf('%s match nvars. PopInitRange should be a',msg) ;
+    error('%s  2 x 1 or 2 x nvars matrix.',msg) ;
 end
 
 % Check initial population with respect to bound constraints
@@ -244,6 +252,8 @@ if ~isempty(LB) || ~isempty(UB)
     options.LinearConstr.type = 'boundconstraints' ;
     if isempty(LB), LB = -inf*ones(1,nvars) ; end
     if isempty(UB), UB =  inf*ones(1,nvars) ; end
+    LB = reshape(LB,1,[]) ;
+    UB = reshape(UB,1,[]) ;
     options.PopInitRange = ...
         psocheckpopulationinitrange(options.PopInitRange,LB,UB) ;
 end
@@ -304,8 +314,8 @@ elseif strcmpi(options.ConstrBoundary,'soft')
     boundcheckfcn = @psoboundssoft ;
 elseif strcmpi(options.ConstrBoundary,'penalize')
     boundcheckfcn = @psoboundspenalize ;
-    state.Penalty = zeros(options.PopulationSize,1) ;
-    state.PreviouslyFeasible = true(options.PopulationSize,1) ;
+%     state.Penalty = zeros(options.PopulationSize,1) ;
+%     state.PreviouslyFeasible = true(options.PopulationSize,1) ;
 elseif strcmpi(options.ConstrBoundary,'reflect')
     boundcheckfcn = @psoboundsreflect ;
 elseif strcmpi(options.ConstrBoundary,'absorb')
@@ -314,13 +324,6 @@ end
 % -------------------------------------------------------------------------
 
 n = options.PopulationSize ; itr = options.Generations ;
-
-% if ~isempty(options.PlotFcns)
-%     close(findobj('Tag','Swarm Plots','Type','figure'))
-%     state.hfigure = figure('NumberTitle','off',...
-%         'Name','PSO Progress',...
-%         'Tag','Swarm Plots') ;
-% end % if ~isempty
 
 % Initialize Figure for displaying plots
 % Change suggested by "Ben" from MATLAB Central.
@@ -353,7 +356,7 @@ state.ParticleInertia = 0.9 ; % Initial inertia
 
 % Iterate swarm
 % -------------------------------------------------------------------------
-averagetime = 0 ;
+averagetime = 0 ; stalltime = 0;
 tic
 for k = 1:itr
     state.Score = inf*ones(n,1) ; % Reset fitness vector
@@ -365,7 +368,6 @@ for k = 1:itr
     % ---------------------------------------------------------------------
     if ~all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
             isempty([LB;UB]), isempty(nonlcon)])
-        
         state = boundcheckfcn(state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,...
             options) ;
     end % if ~isempty
@@ -400,16 +402,6 @@ for k = 1:itr
         end % if strcmpi
     end
     % ---------------------------------------------------------------------
-
-    % Extra white space to facilitate comparison with accidentally branched
-    % code.
-    
-    
-    
-    
-    
-    
-    
     
     % Update the local bests
     % ---------------------------------------------------------------------
@@ -427,6 +419,7 @@ for k = 1:itr
 %         ((1/n)*sum(state.Velocities*state.Velocities')).^2) ;
 %     tempchk = alpha <= 1.6 ;
     if k == 1 || minfitness < state.fGlobalBest(k-1)
+        stalltime = toc ;
         state.fGlobalBest(k) = minfitness ;
         state.xGlobalBest = state.Population(minfitnessindex,:) ;
         state.LastImprovement = k ;
@@ -447,14 +440,18 @@ for k = 1:itr
     
     stallchk = k - state.LastImprovement >= options.StallGenLimit ;
     if stallchk
-        % No improvement for StallGenLimit generations
-        exitflag = 3 ;
-        flag = 'done' ;
+        % No improvement in global best for StallGenLimit generations
+        exitflag = 3 ; flag = 'done' ;
+    end
+    
+    if stalltime - toc > options.StallTimeLimit
+        % No improvement in global best for StallTimeLimit seconds
+        exitflag = -4 ; flag = 'done' ;
     end
      
     if toc + averagetime > options.TimeLimit
-        exitflag = 5 ;
-        flag = 'done' ;
+        % Reached total simulation time of TimeLimit seconds
+        exitflag = -5 ; flag = 'done' ;
     end
     % ---------------------------------------------------------------------
     
@@ -512,7 +509,9 @@ for k = 1:itr
     % ---------------------------------------------------------------------
     
     % Update the particle velocities and positions
+    % ---------------------------------------------------------------------
     state = options.AccelerationFcn(options,state,flag) ;
+    % ---------------------------------------------------------------------
     averagetime = toc/k ;
 end % for k
 % -------------------------------------------------------------------------

@@ -13,6 +13,13 @@ To do (in no particular order):
 * Detect and eliminate dependent (i.e. redundant) linear constraints.
 * Implement multiobjective optimization option; find Pareto front.
 
+ver CURRENT::
+* Changed exit flag for reaching total time limit from 5 to -5, to match exit flags for GA.
+* Implemented stall time limit option, with the algorithm terminating with exit flag -4 if there has been no improvement in global best fitness after a certain number of seconds. Default value is Inf.
+
+ver 20130515b:
+* Fixed namespace issues with duplicate copies of the psoiterate.m file, one of which was outdated.
+
 ver 20130515:
 * Merged back changes from version 20100818 which did not make it into ver 20130502
 * Fixed error with constraint enforcement method set to 'penalize' with an unconstrained problem.

@@ -42,7 +42,7 @@ else
 end
 
 problem.fitnessfcn = fitnessfcn ;
-problem.nvars = 2 ;
+problem.nvars = 3 ;
 
 if ~nargin
     problem.options.DemoMode = 'pretty' ;

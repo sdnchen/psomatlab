@@ -1,5 +1,5 @@
-function [state,options] = psoplotscores(options,state,flag)
-% Plots the best and mean scores of particle swarm.
+function [state,options] = psoplotscorediversity(options,state,flag)
+% Plots a histogram containing the best and mean scores of particle swarm.
 
 if strcmp(flag,'init')
     set(gca,'NextPlot','replacechildren',...
