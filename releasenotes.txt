@@ -1,7 +1,8 @@
 Development Notes for psopt toolbox
 
 To do (in no particular order):
-* Implement parallel computing capabilities (suggestions from Michael Johnston, J. Oliver).
+* Automatically vectorize fitness functions supplied by user, if not already vectorized.
+* Detect and eliminate dependent (i.e. redundant) linear constraints.
 * An output function defined by options.OutputFcns that can save current swarm state in a file which can be reloaded later as a problem structure, in case of a system crash.
 * Ability to define neighborhoods of particles to determine non-local best positions (social parameter).
   - Social stereotyping using clustering algorithm (Kennedy 2000)
@@ -10,10 +11,11 @@ To do (in no particular order):
 * New convergence criterion: isothermal equilibrium (Mikki 2008, Chapter 3).
 * Clerc's method: constriction factor chi to prevent explosive divergence of swarm.
 * Swarm coherence and collision-avoidance parameters?
-* Detect and eliminate dependent (i.e. redundant) linear constraints.
 * Implement multiobjective optimization option; find Pareto front.
 
-ver CURRENT::
+ver 20130615:
+* Added parallel computing capability. Once the distributed computing worker pool has been appropriately set up using MATLABPOOL, run PSO with options.UseParallel set to 'always'. If both Vectorized and UseParallel options are set to 'on' and 'always', respectively, then the vectorized option will override the parallel option. If PSO is unable to find an installed version of the Parallel Computing Toolbox, then the problem will quietly switch to serial computation. Thanks to Michael Johnston and J. Oliver for their suggestions and contributions.
+* Most warning messages will now be suppressed unless options.Display is set 'diagnose'.
 * Changed exit flag for reaching total time limit from 5 to -5, to match exit flags for GA.
 * Implemented stall time limit option, with the algorithm terminating with exit flag -4 if there has been no improvement in global best fitness after a certain number of seconds. Default value is Inf.
 

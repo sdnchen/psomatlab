@@ -13,7 +13,7 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % New features will be added regularly until this is made redundant by an
 % official MATLAB PSO toolbox.
 %
-% Author: S. Chen. Version 20130515.
+% Author: S. Chen. Version 20130615.
 % Available from http://www.mathworks.com/matlabcentral/fileexchange/25986
 % Distributed under BSD license. First published in 2009.
 %
@@ -150,6 +150,8 @@ if ~nargin % Rosenbrock's banana function by default, as a demonstration
     options.DemoMode = 'on' ;
     options.KnownMin = [1 1] ;
     options.OutputFcns = {} ;
+    options.ConstrBoundary = 'penalize' ;
+    options.UseParallel = 'never' ;
 elseif isstruct(fitnessfcn)
     nvars = fitnessfcn.nvars ;
     Aineq = fitnessfcn.Aineq ;
@@ -195,7 +197,8 @@ if ~exist('nonlcon','var'), nonlcon = [] ; end
 
 % Check for swarm stability
 % -------------------------------------------------------------------------
-if options.SocialAttraction + options.CognitiveAttraction >= 4
+if options.SocialAttraction + options.CognitiveAttraction >= 4 && ...
+        verbosity > 2
     msg = 'Warning: Swarm is unstable and may not converge ' ;
     msg = [msg 'since the sum of the cognitive and social attraction'] ;
     msg = [msg ' parameters is greater than or equal to 4.'] ;
@@ -211,20 +214,24 @@ if strncmpi(options.PopulationType,'bitstring',2) && ...
         ~isempty(nonlcon) || ~isempty([LB,UB]))
     Aineq = [] ; bineq = [] ; Aeq = [] ; beq = [] ; nonlcon = [] ;
     LB = [] ; UB = [] ;
-    msg = sprintf('Warning: Constraints will be ignored') ;
-    msg = sprintf('%s for options.PopulationType ''bitstring''',msg) ;
-    disp(msg)
+    if verbosity > 2
+        msg = sprintf('Constraints will be ignored') ;
+        msg = sprintf('%s for options.PopulationType ''bitstring''',msg) ;
+        warning('%s',msg) ;
+    end
 end
 % -------------------------------------------------------------------------
 
 % Change this when nonlcon gets fully implemented:
 % -------------------------------------------------------------------------
 if ~isempty(nonlcon) && strcmpi(options.ConstrBoundary,'reflect')
-    msg = 'Non-linear constraints don''t have ''reflect'' boundaries' ;
-    msg = [msg, ' implemented.'] ;
-    warning('pso:main:nonlcon',...
-        '%s Changing options.ConstrBoundary to ''penalize''.',...
-        msg)
+    if verbosity > 2
+        msg = 'Non-linear constraints don''t have ''reflect'' boundaries' ;
+        msg = [msg, ' implemented.'] ;
+        warning('pso:main:nonlcon',...
+            '%s Changing options.ConstrBoundary to ''penalize''.',...
+            msg)
+    end
     options.ConstrBoundary = 'penalize' ;
 end
 % -------------------------------------------------------------------------
@@ -273,11 +280,39 @@ end % if isscalar
 options.VelocityLimit = abs(options.VelocityLimit) ;
 % -------------------------------------------------------------------------
 
+% Setup for parallel computing
+% -------------------------------------------------------------------------
+if strcmpi(options.UseParallel,'always')
+    if strcmpi(options.Vectorized,'on')
+        if verbosity > 2 
+            msg = 'Both ''Vectorized'' and ''UseParallel'' options have ' ;
+            msg = [msg 'been set. The problem will be computed locally '] ;
+            warning('%s using the ''Vectorized'' computation method.',...
+                msg) ;
+        end
+    elseif isempty(ver('distcomp')) % Check for toolbox installed
+        if verbosity > 2 
+            msg = 'Parallel computing toolbox not installed. Problem' ;
+            warning('%s will be computed locally instead.',msg) ;
+        end
+        options.UseParallel = 'never' ;
+    else
+        poolalreadyopen = false ;
+        if ~matlabpool('size')
+            matlabpool('open','AttachedFiles',...
+                which(func2str(fitnessfcn))) ;
+        else
+            poolalreadyopen = true ;
+        end
+    end
+end
+% -------------------------------------------------------------------------
+
 % Generate swarm initial state (this line must not be moved)
 % -------------------------------------------------------------------------
 if strncmpi(options.PopulationType,'double',2)
     state = psocreationuniform(options,nvars) ;
-elseif strncmpi(options.PopulationType,'bi',2)
+elseif strncmpi(options.PopulationType,'bi',2) % Bitstring variables
     state = psocreationbinary(options,nvars) ;
 end
 % -------------------------------------------------------------------------
@@ -291,12 +326,14 @@ if ~isempty(Aeq) || ~isempty(Aineq) || ~isempty(nonlcon)
     end
     if strcmpi(options.ConstrBoundary,'reflect')
         options.ConstrBoundary = 'penalize' ;
-        msg = sprintf('Constraint boundary behavior ''reflect''') ;
-        msg = sprintf('%s is not supported for linear constraints.',...
-            msg) ;
-        msg = sprintf('%s Switching to ''penalize'' method.',msg) ;
-        warning('pso:mainfcn:constraintbounds',...
-            '%s',msg)
+        if verbosity > 2
+            msg = sprintf('Constraint boundary behavior ''reflect''') ;
+            msg = sprintf('%s is not supported for linear constraints.',...
+                msg) ;
+            msg = sprintf('%s Switching to ''penalize'' method.',msg) ;
+            warning('pso:mainfcn:constraintbounds',...
+                '%s',msg)
+        end
     end
     [state,options] = psocheckinitialpopulation(state,...
         Aineq,bineq,Aeq,beq,...
@@ -377,13 +414,23 @@ for k = 1:itr
     % ---------------------------------------------------------------------
     % Apply constraint violation penalties, if applicable
     if strcmpi(options.ConstrBoundary,'penalize') % EXPERIMENTAL
-        if strcmpi(options.Vectorized,'off')
+        if strcmpi(options.Vectorized,'on') % Vectorized fitness function
+            state.Score = fitnessfcn(state.Population) ;
+        elseif strcmpi(options.UseParallel,'always') % Parallel computing
+            scoretmp = inf*ones(n,1) ;
+            x = state.Population ;
+%             matlabpool('addattachedfiles',{[pwd '\testfcns\nonlinearconstrdemo.m']}) ;
+            parfor i = 1:n
+                scoretmp(i) = fitnessfcn(x(i,:)) ;
+            end % for i
+            state.Score = scoretmp ;
+            clear scoretmp x
+        else % Default
             for i = 1:n
                 state.Score(i) = fitnessfcn(state.Population(i,:)) ;
             end % for i
-        else % Vectorized fitness function
-            state.Score = fitnessfcn(state.Population) ;
         end % if strcmpi
+        
         if ~all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
                 isempty([LB;UB]), isempty(nonlcon)])
             state = psocalculatepenalties(state) ;
@@ -391,14 +438,29 @@ for k = 1:itr
     else % DEFAULT (STABLE)
         % Note that this code does not calculate fitness values for
         % particles that are outside the search space constraints.
-        if strcmpi(options.Vectorized,'off')
-            for i = setdiff(1:n,find(state.OutOfBounds))
+        if strcmpi(options.Vectorized,'on')  % Vectorized fitness function
+            state.Score(not(state.OutOfBounds)) = ...
+                fitnessfcn(state.Population(not(state.OutOfBounds),:)) ;
+        elseif strcmpi(options.UseParallel,'always') % Parallel computing
+            % Thanks to MJ for contributing this code.
+            validi = find(not(state.OutOfBounds))' ;
+            nvalid = numel(validi);
+            x = state.Population(validi,:);
+            scoretmp = inf*ones(nvalid,1) ;
+            
+%             matlabpool('open',{pwd}) ;
+            parfor i = 1:nvalid ;
+                scoretmp(i) = fitnessfcn(x(i,:)) ;
+            end % for i
+            
+            for i = 1:nvalid
+                state.Score(validi(i)) = scoretmp(i) ;
+            end
+            clear scoretmp x
+        else
+            for i = find(not(state.OutOfBounds))'
                 state.Score(i) = fitnessfcn(state.Population(i,:)) ;
             end % for i
-        else % Vectorized fitness function
-            state.Score(setdiff(1:n,find(state.OutOfBounds))) = ...
-                fitnessfcn(state.Population(setdiff(1:n,...
-                find(state.OutOfBounds)),:)) ;
         end % if strcmpi
     end
     % ---------------------------------------------------------------------
@@ -496,10 +558,10 @@ for k = 1:itr
     if ~isempty(options.OutputFcns) && ~mod(k,options.PlotInterval)
         if iscell(options.OutputFcns)
             for i = 1:length(options.OutputFcns)
-                state = options.OutputFcns{i}(options,state,flag) ;
+                [state,options] = options.OutputFcns{i}(options,state,flag) ;
             end % for i
         else
-            state = options.OutputFcns(options,state,flag) ;
+            [state,options] = options.OutputFcns(options,state,flag) ;
         end
     end % if ~isempty
     
@@ -547,6 +609,10 @@ if options.Verbosity > 0
         fprintf('\nFinal best point: %s\n\n',mat2str(xOpt,5))
     end
 end % if options.Verbosity
+
+if strcmp(options.UseParallel,'always') && ~poolalreadyopen
+    matlabpool('close') ;
+end
 
 if ~nargout, clear all, end
 % -------------------------------------------------------------------------

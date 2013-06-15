@@ -29,7 +29,7 @@ cd(workingdir)
 
 options = fitnessfcn('init') ;
 
-if any(isfield(options,{'options','Aineq','Aeq','LB'}))
+if any(isfield(options,{'options','Aineq','Aeq','LB','nonlcon'}))
     % Then the test function gave us a (partial) problem structure.
     problem = options ;
 else
@@ -42,7 +42,7 @@ else
 end
 
 problem.fitnessfcn = fitnessfcn ;
-problem.nvars = 3 ;
+problem.nvars = 2 ;
 
 if ~nargin
     problem.options.DemoMode = 'pretty' ;
@@ -57,4 +57,20 @@ if isfield(problem.options,'PopulationType') && ...
 end
 % problem.options.Display = 'off' ;
 
+if isfield(problem.options,'UseParallel') && ...
+        strcmp(problem.options.UseParallel,'always')
+    poolopen = false ;
+    if ~matlabpool('size')
+        matlabpool('open','AttachedFiles',{[pwd '\testfcns']}) ;
+    else
+        poolopen = true ;
+        pctRunOnAll addpath([pwd '\testfcns']) ;
+    end
+end
+
 pso(problem)
+
+if isfield(problem.options,'UseParallel') && ...
+        strcmp(problem.options.UseParallel,'always') && ~poolopen
+    matlabpool('close');
+end
