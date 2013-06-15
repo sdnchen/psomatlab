@@ -1,5 +1,8 @@
 function minLoc = overlaysurface(fitnessfcn,options)
-% Overlays surface and marks known minimum for demo cases of pso.
+% Overlays surface and marks known minimum for demo cases of pso. Called by
+% PSOPLOTSWARMSURF.
+%
+% See also: PSODEMO, PSOPLOTSWARMSURF
 
 xBound = options.PopInitRange(:,1) ;
 yBound = options.PopInitRange(:,2) ;

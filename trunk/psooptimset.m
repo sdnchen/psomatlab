@@ -103,13 +103,13 @@ options.VelocityLimit = [] ;
 
 if ~nargin && ~nargout
     fprintf('\n')
-    fprintf('Available options for PSOOPTIMSET {defaults}:\n\n')
+    fprintf('Available options for PSOOPTIMSET {defaults in braces}:\n\n')
     fprintf('    AccelerationFcn: [Function handle | {@psoiterate}]\n') ;
     fprintf('CognitiveAttraction: [Positive scalar | {%g}]\n',...
         options.CognitiveAttraction) ;
     fprintf('     ConstrBoundary: [''soft'' | ''penalize'' | ''reflect'' | ''absorb'' | {''%s''}]\n',...
         options.ConstrBoundary) ;
-    fprintf('            Display: [''off'' | ''final'' | {''%s''}]\n',...
+    fprintf('            Display: [''off'' | ''final'' | ''diagnose'' | {''%s''}]\n',...
         options.Display) ;
     fprintf('           DemoMode: [''fast'' | ''pretty'' | ''on'' | ''off'' | {''%s''}]\n',...
         options.DemoMode) ;
@@ -119,8 +119,8 @@ if ~nargin && ~nargout
         options.Generations) ;
     msg = sprintf('          HybridFcn: [@fminsearch | @patternsearch |');
     fprintf('%s @fminunc | @fmincon | {[]}]\n',msg)
-    fprintf('  InitialPopulation: [nxnvars matrix | {[]}]\n')
-    fprintf('  InitialVelocities: [nxnvars matrix | {[]}]\n')
+    fprintf('  InitialPopulation: [empty matrix | nxnvars matrix | {[]}]\n')
+    fprintf('  InitialVelocities: [empty matrix | nxnvars matrix | {[]}]\n')
     % PlotFcns, a bit tricky to turn into a string:
     % ---------------------------------------------------------------------
     if ~isempty(options.PlotFcns)
@@ -147,7 +147,7 @@ if ~nargin && ~nargout
         options.SocialAttraction) ;
     fprintf('      StallGenLimit: [Positive integer | {%g} ]\n',...
         options.StallGenLimit) ;
-    fprintf('      StallTimeLimit: [Positive scalar (seconds) | {%g} ]\n',...
+    fprintf('     StallTimeLimit: [Positive scalar (seconds) | {%g} ]\n',...
         options.StallTimeLimit) ;
     fprintf('          TimeLimit: [Positive scalar (seconds) | {%g} ]\n',...
         options.StallGenLimit) ;
@@ -155,6 +155,8 @@ if ~nargin && ~nargout
         options.TolFun) ;
     fprintf('             TolCon: [Positive scalar | {%g}]\n',...
         options.TolCon) ;
+    fprintf('        UseParallel: [''always'' | ''never'' | {''%s''}]\n',...
+        options.UseParallel) ;
     fprintf('         Vectorized: [''on'' | ''off'' | {''%s''}]\n',...
         options.Vectorized) ;
     fprintf('      VelocityLimit: [Positive scalar | {[]}]\n');

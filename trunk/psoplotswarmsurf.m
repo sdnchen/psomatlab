@@ -2,7 +2,9 @@ function state = psoplotswarmsurf(options,state,flag)
 % Shows the evolution of a 2-variable population over a known surface. This
 % plotting function is useful for observing the performance of the swarm
 % over a given 2-D search space. It is used when running demonstration
-% cases of pso.
+% cases of pso through the PSODEMO function.
+%
+% See also: PSODEMO
 
 notinf = isfinite(state.Score') ;
 % notinf = ~state.OutOfBounds ;
