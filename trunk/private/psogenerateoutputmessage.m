@@ -1,4 +1,7 @@
 function msg = psogenerateoutputmessage(options,output,exitflag)
+% Generates output message after PSO is done.
+%
+% See also: PSO
 
 if exitflag == 0
     msg = sprintf('Reached limit of %g iterations', options.Generations) ;

@@ -1,7 +1,9 @@
 function f = griewangksfcn(x)
-% Template for writing custom test/demonstration functions for psodemo.
-% Change the function name and save as a different file to preserve this
-% template for future use.
+% Griewangk's function.
+% 
+% Formula: f = 1/4000*sum(x.*x,2) - prod(cos(x./idx),2) + 1
+% 
+% Global minimum at (0,0).
 
 if strcmp(x,'init')
     f.PopInitRange = [-600; 600] ;

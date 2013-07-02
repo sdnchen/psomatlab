@@ -14,7 +14,7 @@ else
     end
 end
 
-if options.Verbosity > 0
+if options.Verbosity > 1
     fprintf('\nBest point before hybrid function: %s',...
         mat2str(xOpt,5))
     fprintf('\n\nTurning over to hybrid function %s...\n\n',...
@@ -29,36 +29,42 @@ if exist(func2str(HybridFcn),'file') ~= 2
     return
 end
 
-% Check for constraints
+% Check for constrainted vs. unconstrained problem
 if strcmp(func2str(HybridFcn),func2str(@fmincon)) && ...
         all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
         isempty([LB;UB]),isempty(nonlcon)])
-    if options.Verbosity > 0
-        msg = sprintf('Warning: %s does not accept problems without',...
+    % If hybrid function is fmincon and there are no constraints,
+    % automatically switch to fminunc
+    if options.Verbosity > 2
+        msg = sprintf('%s does not accept problems without',...
             func2str(HybridFcn)) ;
-        fprintf('%s constraints. Switching to fminunc.\n\n',msg)
+        warning('%s constraints. Switching to fminunc.\n\n',msg)
     end % if options.Verbosity
     HybridFcn = @fminunc ;
 elseif (strcmp(func2str(HybridFcn),func2str(@fminunc)) || ...
         strcmp(func2str(HybridFcn),func2str(@fminsearch))) && ...
         ~all([isempty([Aineq,bineq]), isempty([Aeq,beq]), ...
         isempty([LB;UB]),isempty(nonlcon)])
-    if options.Verbosity > 0
-        msg = sprintf('Warning: %s does not accept problems with',...
+    % If hybrid function is fminunc and there are constraints,
+    % automatically switch to fmincon
+    if options.Verbosity > 2
+        msg = sprintf('%s does not accept problems with',...
             func2str(HybridFcn)) ;
-        fprintf(0,'%s constraints. Switching to fmincon.\n\n',msg)
+        warning('%s constraints. Switching to fmincon.\n\n',msg)
     end % if options.Verbosity
     HybridFcn = @fmincon ;
 end
 
 if strcmp(func2str(HybridFcn),func2str(@fmincon)) || ...
         strcmp(func2str(HybridFcn),func2str(@patternsearch))
+    % Constrained
     [xOpt,fval] = HybridFcn(fitnessfcn,xOpt,Aineq,bineq,...
         Aeq,beq,LB,UB,nonlcon,hybridOptions) ;
 elseif strcmp(func2str(HybridFcn),func2str(@fminunc)) || ...
         strcmp(func2str(HybridFcn),func2str(@fminsearch))
+    % Unconstrained
     [xOpt,fval] = HybridFcn(fitnessfcn,xOpt,hybridOptions) ;
-else
+elseif options.Verbosity > 2
     warning('pso:hybridfcn:unrecognized',...
         'Unrecognized hybrid function. Ignoring for it now.')
 end

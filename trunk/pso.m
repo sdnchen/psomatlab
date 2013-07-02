@@ -13,7 +13,7 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % New features will be added regularly until this is made redundant by an
 % official MATLAB PSO toolbox.
 %
-% Author: S. Chen. Version 20130615.
+% Author: S. Chen. Version 20130702.
 % Available from http://www.mathworks.com/matlabcentral/fileexchange/25986
 % Distributed under BSD license. First published in 2009.
 %
@@ -198,7 +198,7 @@ if ~exist('nonlcon','var'), nonlcon = [] ; end
 % Check for swarm stability
 % -------------------------------------------------------------------------
 if options.SocialAttraction + options.CognitiveAttraction >= 4 && ...
-        verbosity > 2
+        options.Verbosity > 2
     msg = 'Warning: Swarm is unstable and may not converge ' ;
     msg = [msg 'since the sum of the cognitive and social attraction'] ;
     msg = [msg ' parameters is greater than or equal to 4.'] ;
@@ -214,7 +214,7 @@ if strncmpi(options.PopulationType,'bitstring',2) && ...
         ~isempty(nonlcon) || ~isempty([LB,UB]))
     Aineq = [] ; bineq = [] ; Aeq = [] ; beq = [] ; nonlcon = [] ;
     LB = [] ; UB = [] ;
-    if verbosity > 2
+    if options.Verbosity > 2
         msg = sprintf('Constraints will be ignored') ;
         msg = sprintf('%s for options.PopulationType ''bitstring''',msg) ;
         warning('%s',msg) ;
@@ -225,7 +225,7 @@ end
 % Change this when nonlcon gets fully implemented:
 % -------------------------------------------------------------------------
 if ~isempty(nonlcon) && strcmpi(options.ConstrBoundary,'reflect')
-    if verbosity > 2
+    if options.Verbosity > 2
         msg = 'Non-linear constraints don''t have ''reflect'' boundaries' ;
         msg = [msg, ' implemented.'] ;
         warning('pso:main:nonlcon',...
@@ -284,14 +284,14 @@ options.VelocityLimit = abs(options.VelocityLimit) ;
 % -------------------------------------------------------------------------
 if strcmpi(options.UseParallel,'always')
     if strcmpi(options.Vectorized,'on')
-        if verbosity > 2 
+        if options.Verbosity > 2 
             msg = 'Both ''Vectorized'' and ''UseParallel'' options have ' ;
             msg = [msg 'been set. The problem will be computed locally '] ;
             warning('%s using the ''Vectorized'' computation method.',...
                 msg) ;
         end
     elseif isempty(ver('distcomp')) % Check for toolbox installed
-        if verbosity > 2 
+        if options.Verbosity > 2 
             msg = 'Parallel computing toolbox not installed. Problem' ;
             warning('%s will be computed locally instead.',msg) ;
         end
@@ -326,7 +326,7 @@ if ~isempty(Aeq) || ~isempty(Aineq) || ~isempty(nonlcon)
     end
     if strcmpi(options.ConstrBoundary,'reflect')
         options.ConstrBoundary = 'penalize' ;
-        if verbosity > 2
+        if options.Verbosity > 2
             msg = sprintf('Constraint boundary behavior ''reflect''') ;
             msg = sprintf('%s is not supported for linear constraints.',...
                 msg) ;
@@ -360,8 +360,6 @@ elseif strcmpi(options.ConstrBoundary,'absorb')
 end
 % -------------------------------------------------------------------------
 
-n = options.PopulationSize ; itr = options.Generations ;
-
 % Initialize Figure for displaying plots
 % Change suggested by "Ben" from MATLAB Central.
 % -------------------------------------------------------------------------
@@ -393,6 +391,7 @@ state.ParticleInertia = 0.9 ; % Initial inertia
 
 % Iterate swarm
 % -------------------------------------------------------------------------
+n = options.PopulationSize ; itr = options.Generations ;
 averagetime = 0 ; stalltime = 0;
 tic
 for k = 1:itr
@@ -442,13 +441,12 @@ for k = 1:itr
             state.Score(not(state.OutOfBounds)) = ...
                 fitnessfcn(state.Population(not(state.OutOfBounds),:)) ;
         elseif strcmpi(options.UseParallel,'always') % Parallel computing
-            % Thanks to MJ for contributing this code.
+            % Thanks to Oliver and Mike for contributing this code.
             validi = find(not(state.OutOfBounds))' ;
             nvalid = numel(validi);
             x = state.Population(validi,:);
             scoretmp = inf*ones(nvalid,1) ;
             
-%             matlabpool('open',{pwd}) ;
             parfor i = 1:nvalid ;
                 scoretmp(i) = fitnessfcn(x(i,:)) ;
             end % for i
