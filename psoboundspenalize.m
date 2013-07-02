@@ -1,7 +1,6 @@
 function state = ...
     psoboundspenalize(state,Aineq,bineq,Aeq,beq,LB,UB,nonlcon,options)
-% This is like "soft" boundaries, except that some kind of penalty value
-% must be calculated from the degree of each constraint violation.
+% Penalty-based constraint enforcement method.
 
 x = state.Population ;
 v = state.Velocities ;
