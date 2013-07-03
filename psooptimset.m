@@ -42,16 +42,33 @@ function options = psooptimset(varargin)
 % options which may be set.
 %
 % NOTE regarding the ConstrBoundary option:
+% The 'penalize' constraint management option as described in Perez 2007 is
+% the default since it seems to provide the best combination of performance
+% and versatility. It combines the best of the 'soft' and 'absorb' methods
+% and adds a penalty calculated for every infeasible point in the search
+% space.
+%
+% Although the 'penalize' method is preferred, the 'soft' or 'absorb' style
+% boundaries may still be used. They are described below. They are not very
+% effective if your problem contains any nonlinear equality constraints of
+% the form ceq(x) = 0 or linear equality constraints of the form Aeq*x =
+% beq. If your problem does not require any equality constraints, then
+% calculations may be faster with 'soft' boundaries since infeasible
+% solutions are not evaluated at all and simply assigned a fitness score of
+% infinity.
+%
 % A 'soft' boundary allows particles to leave problem bounds, but sets
 % their fitness scores to Inf if they do. This can save time, since
-% infeasible points are not evaluated. Other acceptable options are
-% 'penalize', 'reflect', and 'absorb',
-% The 'penalize' option as described in Perez 2007 is the default since it
-% seems to provide the best combination of performance and versatility.
+% infeasible points are not evaluated. This will also save you some trouble
+% if your fitness function has the possibility of throwing errors if it
+% tries to evaluate an infeasible point in the search space.
+% 
 % The 'reflect' and 'absorb' options prevent the particles from travelling
-% outside the problem bounds at all. However, 'reflect' has only been
-% implemented for bounded constraints, and 'absorb' may suffer from poor
-% performance if linear or nonlinear equality constraints are used.
+% outside the problem bounds at all. Note that 'reflect' has only been
+% implemented for bounded constraints, and is not really suitable for any
+% other problem type at this time. The 'absorb' method may suffer from poor
+% performance if linear or nonlinear equality constraints are used. Both
+% are likely to be deprecated in the near future.
 %
 % NOTE regarding cognitive and social attraction parameters:
 % Perez and Behdinan (2007) demonstrated that the particle swarm is only
