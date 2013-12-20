@@ -13,7 +13,7 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % New features will be added regularly until this is made redundant by an
 % official MATLAB PSO toolbox.
 %
-% Author: S. Chen. Version 20130702.
+% Author: S. Chen. Version 20131220.
 % Available from http://www.mathworks.com/matlabcentral/fileexchange/25986
 % Distributed under BSD license. First published in 2009.
 %
@@ -556,7 +556,8 @@ for k = 1:itr
     if ~isempty(options.OutputFcns) && ~mod(k,options.PlotInterval)
         if iscell(options.OutputFcns)
             for i = 1:length(options.OutputFcns)
-                [state,options] = options.OutputFcns{i}(options,state,flag) ;
+                [state,options] = ...
+                    options.OutputFcns{i}(options,state,flag) ;
             end % for i
         else
             [state,options] = options.OutputFcns(options,state,flag) ;
