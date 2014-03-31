@@ -16,6 +16,9 @@ Future plans (in no particular order):
 * Feature: Clerc's method: constriction factor chi to prevent explosive divergence of swarm.
 * Feature: Swarm coherence and collision-avoidance parameters?
 
+ver 20130330
+* Bug fix: corrected typo in PSOCHECKPOPULATIONINITRANGE which was causing incorrect handling of initial particle distribution boundaries. Thanks to Erik from the MATLAB Central community.
+
 ver 20131220
 * Performance improvement: Added parallel computing capability to constraint violation calculations for "penalize" method.
 * Performance improvement: Optimized and refactored code for calculating constraint violations for "penalize" method.
