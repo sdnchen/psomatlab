@@ -60,8 +60,8 @@ end
 if isfield(problem.options,'UseParallel') && ...
         strcmp(problem.options.UseParallel,'always')
     poolopen = false ;
-    if ~matlabpool('size')
-        matlabpool('open','AttachedFiles',{[pwd '\testfcns']}) ;
+    if isempty(gcp('nocreate'))
+        parpool('open','AttachedFiles',{[pwd '\testfcns']}) ;
     else
         poolopen = true ;
         pctRunOnAll addpath([pwd '\testfcns']) ;
@@ -72,5 +72,5 @@ pso(problem)
 
 if isfield(problem.options,'UseParallel') && ...
         strcmp(problem.options.UseParallel,'always') && ~poolopen
-    matlabpool('close');
+    delete(gcp('nocreate'));
 end

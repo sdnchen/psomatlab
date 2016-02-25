@@ -40,6 +40,7 @@ end
 state.ParticleInertia = upperinertia - ...
     lowerinertia*(state.Generation-1) / ...
     (options.Generations-1) ;
+end
 
 function state = checkmaxvelocities(state,options)
 % Checks the particle velocities against options.VelocityLimit
@@ -51,8 +52,10 @@ if ~isempty(options.VelocityLimit) && ... % Check max velocities
     state.Velocities = max(state.Velocities, ...
         repmat(-options.VelocityLimit,n,1)) ;
 end
+end
 
 function s = sigmoid(v)
 % Sigmoid function for bit string iteration
 
 s = 1./(1+exp(-v)) ;
+end

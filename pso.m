@@ -298,8 +298,8 @@ if strcmpi(options.UseParallel,'always')
         options.UseParallel = 'never' ;
     else
         poolalreadyopen = false ;
-        if ~matlabpool('size')
-            matlabpool('open','AttachedFiles',...
+        if isempty(gcp('nocreate'))
+            parpool('open','AttachedFiles',...
                 which(func2str(fitnessfcn))) ;
         else
             poolalreadyopen = true ;
@@ -610,8 +610,8 @@ if options.Verbosity > 0
 end % if options.Verbosity
 
 if strcmp(options.UseParallel,'always') && ~poolalreadyopen
-    matlabpool('close') ;
+    delete(gcp('nocreate')) ;
 end
 
-if ~nargout, clear all, end
+if ~nargout, clearvars, end
 % -------------------------------------------------------------------------
