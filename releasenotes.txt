@@ -26,7 +26,7 @@ ver 20131220
 * Minor bugfix: in psoboundspenalize, code for applying tolerances to equality constraints will now properly execute after checking for existence of equality constraints.
 
 ver 20130702:
-* Bug fix: multiple errors in variable name when checking for verbosity before warnings were thrown -- did not properly specify the options structure array. Thanks to Chrisitan Hansen of the University of Hannover for pointing this out.
+* Bug fix: multiple errors in variable name when checking for verbosity before warnings were thrown -- did not properly specify the options structure array. Thanks to Christian Hansen of the University of Hannover for pointing this out.
 * Documentation updated for PSOOPTIMSET function.
 
 ver 20130615:
