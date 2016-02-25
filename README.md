@@ -47,3 +47,6 @@ If you are a beginner hoping to learn to use this toolbox for work or school, he
   * MATLAB's Optimization Toolbox: http://www.mathworks.com/help/optim/index.html
   * MATLAB's Global Optimization Toolbox: http://www.mathworks.com/help/gads/index.html
   * MATLAB's Genetic Algorithm: http://www.mathworks.com/help/gads/genetic-algorithm.html
+
+#Addendum D
+There is now a particle swarm optimizer included with the Global Optimization Toolbox. It does not seem to handle constraints at this time. If you have a recent version of the Global Optimization Toolbox installed, you will need to set the path appropriately in your code to use this toolbox.
