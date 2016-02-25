@@ -7,6 +7,7 @@ function f = rosenbrocksfcn(x)
 if strcmp(x,'init')
     f.PopInitRange = [-2, -2; 2, 2] ;
     f.KnownMin = [1,1] ;
+    f.UseParallel = 'Always' ;
 else
     x = reshape(x,1,[]) ;
     if size(x,2) >= 2

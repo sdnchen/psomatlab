@@ -299,8 +299,8 @@ if strcmpi(options.UseParallel,'always')
     else
         poolalreadyopen = false ;
         if isempty(gcp('nocreate'))
-            parpool('open','AttachedFiles',...
-                which(func2str(fitnessfcn))) ;
+            poolobj = parpool ;
+            addAttachedFiles(poolobj,which(func2str(fitnessfcn))) ;
         else
             poolalreadyopen = true ;
         end
@@ -609,7 +609,7 @@ if options.Verbosity > 0
     end
 end % if options.Verbosity
 
-if strcmp(options.UseParallel,'always') && ~poolalreadyopen
+if strcmpi(options.UseParallel,'always') && ~poolalreadyopen
     delete(gcp('nocreate')) ;
 end
 

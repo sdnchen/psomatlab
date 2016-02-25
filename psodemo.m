@@ -11,8 +11,8 @@ function psodemo(DemoMode)
 % Distributed under BSD license.
 
 workingdir = pwd ;
-testdir = ls('testf*') ;
-if ~isempty(testdir), cd(testdir), end
+testdir = dir('testf*') ;
+if ~isempty(testdir.name), cd(testdir.name), end
 
 [testfcn,testdir] = uigetfile('*.m','Load demo function for PSO') ;
 if ~testfcn
@@ -58,19 +58,20 @@ end
 % problem.options.Display = 'off' ;
 
 if isfield(problem.options,'UseParallel') && ...
-        strcmp(problem.options.UseParallel,'always')
+        strcmpi(problem.options.UseParallel,'always')
     poolopen = false ;
     if isempty(gcp('nocreate'))
-        parpool('open','AttachedFiles',{[pwd '\testfcns']}) ;
+        poolobj = parpool ;
+        addAttachedFiles(poolobj,[pwd '/testfcns']) ;
     else
         poolopen = true ;
-        pctRunOnAll addpath([pwd '\testfcns']) ;
+        pctRunOnAll addpath([pwd '/testfcns']) ;
     end
 end
 
 pso(problem)
 
 if isfield(problem.options,'UseParallel') && ...
-        strcmp(problem.options.UseParallel,'always') && ~poolopen
+        strcmpi(problem.options.UseParallel,'always') && ~poolopen
     delete(gcp('nocreate'));
 end
