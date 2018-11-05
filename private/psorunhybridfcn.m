@@ -21,7 +21,8 @@ if options.Verbosity > 1
         func2str(HybridFcn))
 end
 
-if ~exist(func2str(HybridFcn),'file')
+if exist(func2str(HybridFcn),'file') ~= 2 || ...
+    exist(func2str(HybridFcn),'file') ~= 6  
     warning('pso:hybridfcn:nofile',...
         'Hybrid function %s cannot be found. Check toolboxes.',...
         func2str(HybridFcn))

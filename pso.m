@@ -13,7 +13,7 @@ function [xOpt,fval,exitflag,output,population,scores] = ...
 % New features will be added regularly until this is made redundant by an
 % official MATLAB PSO toolbox.
 %
-% Author: S. Samuel Chen. Version 1.31.2.
+% Author: S. Samuel Chen. Version 1.31.4.
 % Available from http://www.mathworks.com/matlabcentral/fileexchange/25986
 % Distributed under BSD license. First published in 2009.
 %
@@ -447,7 +447,7 @@ for k = 1:itr
             x = state.Population(validi,:);
             scoretmp = inf*ones(nvalid,1) ;
             
-            parfor i = 1:nvalid ;
+            parfor i = 1:nvalid
                 scoretmp(i) = fitnessfcn(x(i,:)) ;
             end % for i
             
